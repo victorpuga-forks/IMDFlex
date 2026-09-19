@@ -1,6 +1,10 @@
 import XCTest
 import SwiftUI
+#if canImport(UIKit)
 import UIKit
+#elseif canImport(AppKit)
+import AppKit
+#endif
 @testable import DesignSystem
 
 @MainActor
@@ -102,7 +106,7 @@ final class IMDFDesignContractTests: XCTestCase {
         // Given
         let sut = resolvedComponents(
             of: IMDFColor.accent,
-            traits: UITraitCollection(userInterfaceStyle: .light)
+            trait: AppearanceTrait(style: .light, highContrast: false)
         )
 
         // When
@@ -123,15 +127,15 @@ final class IMDFDesignContractTests: XCTestCase {
             IMDFColor.warning,
             IMDFColor.danger,
         ]
-        let appearances = appearanceTraits
+        let traits = appearanceTraits
 
         // When
-        let contrastRatios = appearances.flatMap { traits in
+        let contrastRatios = traits.flatMap { trait in
             semanticColors.map { color in
                 contrastRatio(
                     foreground: color,
-                    background: Color(uiColor: .systemBackground),
-                    traits: traits
+                    background: systemBackground,
+                    trait: trait
                 )
             }
         }
@@ -150,12 +154,12 @@ final class IMDFDesignContractTests: XCTestCase {
         ]
 
         // When
-        let contrastRatios = appearanceTraits.flatMap { traits in
+        let contrastRatios = appearanceTraits.flatMap { trait in
             filledActionColors.map { color in
                 contrastRatio(
                     foreground: .white,
                     background: color,
-                    traits: traits
+                    trait: trait
                 )
             }
         }
@@ -166,11 +170,8 @@ final class IMDFDesignContractTests: XCTestCase {
 
     func test_whenHighContrastAppearanceIsEnabled_thenSemanticAssetsUseDistinctValues() {
         // Given
-        let standardTraits = UITraitCollection(userInterfaceStyle: .light)
-        let highContrastTraits = UITraitCollection {
-            $0.userInterfaceStyle = .light
-            $0.accessibilityContrast = .high
-        }
+        let standardTrait = AppearanceTrait(style: .light, highContrast: false)
+        let highContrastTrait = AppearanceTrait(style: .light, highContrast: true)
         let semanticColors = [
             IMDFColor.accent,
             IMDFColor.success,
@@ -185,8 +186,8 @@ final class IMDFDesignContractTests: XCTestCase {
         // When
         let resolvedPairs = semanticColors.map { color in
             (
-                UIColor(color).resolvedColor(with: standardTraits),
-                UIColor(color).resolvedColor(with: highContrastTraits)
+                resolvedComponents(of: color, trait: standardTrait),
+                resolvedComponents(of: color, trait: highContrastTrait)
             )
         }
 
@@ -217,10 +218,48 @@ final class IMDFDesignContractTests: XCTestCase {
         XCTAssertTrue(unresolvedValues.isEmpty)
     }
 
+    // MARK: - Cross-platform appearance resolution
+
+    /// Platform-neutral stand-in for `UITraitCollection` (iOS) / `NSAppearance` (macOS).
+    private struct AppearanceTrait {
+        enum Style {
+            case light
+            case dark
+        }
+
+        let style: Style
+        let highContrast: Bool
+    }
+
+    private var appearanceTraits: [AppearanceTrait] {
+        [
+            AppearanceTrait(style: .light, highContrast: false),
+            AppearanceTrait(style: .dark, highContrast: false),
+            AppearanceTrait(style: .light, highContrast: true),
+            AppearanceTrait(style: .dark, highContrast: true),
+        ]
+    }
+
+    private var systemBackground: Color {
+        #if canImport(UIKit)
+        Color(uiColor: .systemBackground)
+        #elseif canImport(AppKit)
+        Color(nsColor: .windowBackgroundColor)
+        #endif
+    }
+
     private func resolvedComponents(
         of color: Color,
-        traits: UITraitCollection
+        trait: AppearanceTrait
     ) -> [CGFloat] {
+        #if canImport(UIKit)
+        var traits = UITraitCollection(userInterfaceStyle: trait.style == .dark ? .dark : .light)
+        if trait.highContrast {
+            traits = UITraitCollection(traitsFrom: [
+                traits,
+                UITraitCollection { $0.accessibilityContrast = .high },
+            ])
+        }
         let resolvedColor = UIColor(color).resolvedColor(with: traits)
         var red: CGFloat = 0
         var green: CGFloat = 0
@@ -228,41 +267,48 @@ final class IMDFDesignContractTests: XCTestCase {
         var alpha: CGFloat = 0
         resolvedColor.getRed(&red, green: &green, blue: &blue, alpha: &alpha)
         return [red, green, blue, alpha]
+        #elseif canImport(AppKit)
+        let appearanceName: NSAppearance.Name = switch (trait.style, trait.highContrast) {
+        case (.light, false): .aqua
+        case (.light, true): .accessibilityHighContrastAqua
+        case (.dark, false): .darkAqua
+        case (.dark, true): .accessibilityHighContrastDarkAqua
+        }
+        guard let appearance = NSAppearance(named: appearanceName) else {
+            return [0, 0, 0, 0]
+        }
+        var components: [CGFloat] = [0, 0, 0, 0]
+        appearance.performAsCurrentDrawingAppearance {
+            let resolvedColor = NSColor(color).usingColorSpace(.deviceRGB) ?? NSColor(color)
+            components = [
+                resolvedColor.redComponent,
+                resolvedColor.greenComponent,
+                resolvedColor.blueComponent,
+                resolvedColor.alphaComponent,
+            ]
+        }
+        return components
+        #endif
     }
 
     private func contrastRatio(
         foreground: Color,
         background: Color,
-        traits: UITraitCollection
+        trait: AppearanceTrait
     ) -> CGFloat {
         let foregroundComponents = resolvedComponents(
             of: foreground,
-            traits: traits
+            trait: trait
         )
         let backgroundComponents = resolvedComponents(
             of: background,
-            traits: traits
+            trait: trait
         )
         let foregroundLuminance = relativeLuminance(of: foregroundComponents)
         let backgroundLuminance = relativeLuminance(of: backgroundComponents)
         let lighter = max(foregroundLuminance, backgroundLuminance)
         let darker = min(foregroundLuminance, backgroundLuminance)
         return (lighter + 0.05) / (darker + 0.05)
-    }
-
-    private var appearanceTraits: [UITraitCollection] {
-        [
-            UITraitCollection(userInterfaceStyle: .light),
-            UITraitCollection(userInterfaceStyle: .dark),
-            UITraitCollection {
-                $0.userInterfaceStyle = .light
-                $0.accessibilityContrast = .high
-            },
-            UITraitCollection {
-                $0.userInterfaceStyle = .dark
-                $0.accessibilityContrast = .high
-            },
-        ]
     }
 
     private func relativeLuminance(of components: [CGFloat]) -> CGFloat {

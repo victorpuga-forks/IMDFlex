@@ -3,8 +3,8 @@ import ProjectDescription
 public enum AppConstants {
     public static let appName = "IMDFlex"
     public static let bundleIdPrefix = "com.luminoux.imdflex"
-    public static let deploymentTarget: DeploymentTargets = .iOS("18.0")
-    public static let destinations: Destinations = .iOS
+    public static let deploymentTarget: DeploymentTargets = .multiplatform(iOS: "18.0", macOS: "15.0")
+    public static let destinations: Destinations = [.iPhone, .iPad, .mac]
     
     public enum Version {
         public static let app = "1.0.0"

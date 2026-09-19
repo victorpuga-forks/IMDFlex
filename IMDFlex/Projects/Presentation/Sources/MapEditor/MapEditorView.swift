@@ -34,7 +34,9 @@ public struct MapEditorView: View {
             .padding(IMDFSpacing.lg)
         }
         .navigationTitle(project.name)
+        #if os(iOS)
         .navigationBarTitleDisplayMode(.inline)
+        #endif
         .toolbar {
             ToolbarItem(placement: .primaryAction) {
                 Menu {
