@@ -387,6 +387,7 @@ public final class MapEditorViewModel {
     private func save(_ venue: Venue) async -> Bool {
         var updatedProject = project
         updatedProject.venue = venue
+        updatedProject.document = IMDFDocument(venue: venue)
         updatedProject.updatedAt = Date()
 
         do {

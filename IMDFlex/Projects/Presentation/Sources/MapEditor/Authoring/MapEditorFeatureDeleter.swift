@@ -87,19 +87,12 @@ public enum MapEditorFeatureDeleter {
                 level.openings.removeAll { $0.id == id }
                 return level
             }
-        case .amenity, .anchor, .occupant:
+        case .amenity, .occupant:
             updatedVenue.buildings = updateUnits(in: updatedVenue.buildings) { unit in
                 var unit = unit
                 switch feature {
                 case .amenity:
                     unit.amenities.removeAll { $0.id == id }
-                case .anchor:
-                    unit.anchors.removeAll { $0.id == id }
-                    unit.occupants = unit.occupants.map { occupant in
-                        var occupant = occupant
-                        if occupant.anchorID == id { occupant.anchorID = nil }
-                        return occupant
-                    }
                 case .occupant:
                     unit.occupants.removeAll { $0.id == id }
                 default:
@@ -107,21 +100,30 @@ public enum MapEditorFeatureDeleter {
                 }
                 return unit
             }
-            if feature == .anchor {
-                updatedVenue.buildings = updateLevels(in: updatedVenue.buildings) { level in
-                    var level = level
-                    level.fixtures = level.fixtures.map { fixture in
-                        var fixture = fixture
-                        fixture.anchorIDs.removeAll { $0 == id }
-                        return fixture
+        case .anchor:
+            updatedVenue.buildings = updateLevels(in: updatedVenue.buildings) { level in
+                var level = level
+                level.units = level.units.map { unit in
+                    var unit = unit
+                    unit.anchors.removeAll { $0.id == id }
+                    unit.occupants = unit.occupants.map { occupant in
+                        var occupant = occupant
+                        if occupant.anchorID == id { occupant.anchorID = nil }
+                        return occupant
                     }
-                    level.kiosks = level.kiosks.map { kiosk in
-                        var kiosk = kiosk
-                        kiosk.anchorIDs.removeAll { $0 == id }
-                        return kiosk
-                    }
-                    return level
+                    return unit
                 }
+                level.fixtures = level.fixtures.map { fixture in
+                    var fixture = fixture
+                    fixture.anchorIDs.removeAll { $0 == id }
+                    return fixture
+                }
+                level.kiosks = level.kiosks.map { kiosk in
+                    var kiosk = kiosk
+                    kiosk.anchorIDs.removeAll { $0 == id }
+                    return kiosk
+                }
+                return level
             }
         case .detail, .fixture, .geofence, .kiosk, .section:
             updatedVenue.buildings = updateLevels(in: updatedVenue.buildings) { level in
@@ -202,7 +204,9 @@ public enum MapEditorFeatureDeleter {
     }
 
     private static func allIDs(in building: Building) -> [UUID] {
-        [building.id] + building.levels.flatMap(allIDs(in:))
+        [building.id]
+            + (building.footprint.map { [$0.id] } ?? [])
+            + building.levels.flatMap(allIDs(in:))
     }
 
     private static func allIDs(in level: Level) -> [UUID] {

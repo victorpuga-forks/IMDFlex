@@ -15,7 +15,29 @@ public final class ProjectUseCase: Sendable {
     }
     
     public func loadProjects() async throws -> [IMDFProject] {
-        try await repository.fetchAll()
+        let projects = try await repository.fetchAll()
+        var migratedProjects: [IMDFProject] = []
+        migratedProjects.reserveCapacity(projects.count)
+
+        for project in projects {
+            guard project.document == nil, let venue = project.venue else {
+                migratedProjects.append(project)
+                continue
+            }
+
+            let migrated = IMDFProject(
+                id: project.id,
+                name: project.name,
+                venue: venue,
+                document: IMDFDocument(venue: venue),
+                createdAt: project.createdAt,
+                updatedAt: project.updatedAt
+            )
+            try await repository.save(migrated)
+            migratedProjects.append(migrated)
+        }
+
+        return migratedProjects
     }
     
     public func updateProject(_ project: IMDFProject) async throws {
@@ -24,6 +46,7 @@ public final class ProjectUseCase: Sendable {
             id: project.id,
             name: project.name,
             venue: project.venue,
+            document: project.currentDocument,
             createdAt: project.createdAt,
             updatedAt: Date()
         )

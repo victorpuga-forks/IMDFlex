@@ -1,10 +1,14 @@
 import Foundation
 import Domain
 
+public enum ProjectRepositoryError: Error, Sendable {
+    case failedToDecode(url: URL, underlying: Error)
+}
+
 /// 파일 기반 프로젝트 저장소
 public final class ProjectRepository: ProjectRepositoryProtocol, @unchecked Sendable {
     private let fileManager = FileManager.default
-    private let encoder = JSONEncoder()
+    private let encoder: JSONEncoder
     private let decoder = JSONDecoder()
     
     private var projectsDirectory: URL {
@@ -13,18 +17,24 @@ public final class ProjectRepository: ProjectRepositoryProtocol, @unchecked Send
     }
     
     public init() {
+        let encoder = JSONEncoder()
+        encoder.outputFormatting = [.prettyPrinted, .sortedKeys, .withoutEscapingSlashes]
+        self.encoder = encoder
         try? fileManager.createDirectory(at: projectsDirectory, withIntermediateDirectories: true)
     }
     
     public func fetchAll() async throws -> [IMDFProject] {
         let files = try fileManager.contentsOfDirectory(at: projectsDirectory, includingPropertiesForKeys: nil)
-        return try files
-            .filter { $0.pathExtension == "json" }
-            .compactMap { url -> IMDFProject? in
+        var projects: [IMDFProject] = []
+        for url in files where url.pathExtension == "json" {
+            do {
                 let data = try Data(contentsOf: url)
-                return try? decoder.decode(IMDFProject.self, from: data)
+                projects.append(try decoder.decode(IMDFProject.self, from: data))
+            } catch {
+                throw ProjectRepositoryError.failedToDecode(url: url, underlying: error)
             }
-            .sorted { $0.updatedAt > $1.updatedAt }
+        }
+        return projects.sorted { $0.updatedAt > $1.updatedAt }
     }
     
     public func fetch(id: UUID) async throws -> IMDFProject? {

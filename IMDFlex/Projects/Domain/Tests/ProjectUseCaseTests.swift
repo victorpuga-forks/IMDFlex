@@ -34,6 +34,24 @@ final class ProjectUseCaseTests: XCTestCase {
         XCTAssertEqual(projectIDs, [firstProject.id, secondProject.id])
     }
 
+    func test_whenLegacyProjectIsLoaded_thenItIsMigratedAndSavedWithFlatDocument() async throws {
+        // Given
+        let (sut, repository) = makeSUT()
+        let venue = Venue(name: "Legacy Venue", category: .university)
+        let legacyProject = IMDFProject(name: "Legacy Project", venue: venue)
+        try await repository.save(legacyProject)
+
+        // When
+        let projects = try await sut.loadProjects()
+
+        // Then
+        let migrated = try XCTUnwrap(projects.first)
+        XCTAssertEqual(migrated.document?.venue.id, venue.id)
+        XCTAssertEqual(migrated.venue?.id, venue.id)
+        let persisted = try await repository.fetch(id: legacyProject.id)
+        XCTAssertNotNil(persisted?.document)
+    }
+
     func test_whenProjectIsUpdated_thenUpdatedAtIsRefreshedAndContentIsPreserved() async throws {
         // Given
         let (sut, repository) = makeSUT()
