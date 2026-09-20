@@ -25,17 +25,29 @@ public struct MapEditorView: View {
                         ForEach(viewModel.featureShapes) { shape in
                             mapContent(for: shape)
                         }
+
+                        if viewModel.mode == .view, viewModel.canEditSelectedFeatureGeometry {
+                            geometryEditingContent(proxy: proxy)
+                        }
                     }
                     .mapStyle(.standard)
                     .onTapGesture(coordinateSpace: .local) { screenPoint in
-                        guard viewModel.mode == .insert else { return }
                         guard let coordinate = proxy.convert(screenPoint, from: .local) else { return }
-                        viewModel.authoringState.appendDraftCoordinate(
-                            IMDFDraftCoordinate(
-                                longitude: coordinate.longitude,
-                                latitude: coordinate.latitude
+
+                        switch viewModel.mode {
+                        case .insert:
+                            viewModel.authoringState.appendDraftCoordinate(
+                                IMDFDraftCoordinate(
+                                    longitude: coordinate.longitude,
+                                    latitude: coordinate.latitude
+                                )
                             )
-                        )
+                        case .view:
+                            guard viewModel.isAddingGeometryPoint else { return }
+                            viewModel.appendGeometryPoint(
+                                Coordinate(latitude: coordinate.latitude, longitude: coordinate.longitude)
+                            )
+                        }
                     }
                 }
                 .ignoresSafeArea(edges: .bottom)
@@ -141,8 +153,9 @@ public struct MapEditorView: View {
     private func mapContent(for shape: MapEditorFeatureShape) -> some MapContent {
         let color = MapEditorFeatureColor.color(for: shape.feature)
         let isSelected = shape.id == viewModel.selectedShapeID
+        let geometry = isSelected && viewModel.mode == .view ? liveGeometry(for: shape) : shape.geometry
 
-        switch shape.geometry {
+        switch geometry {
         case .polygon(let coordinates):
             MapPolygon(coordinates: coordinates.map(coordinate))
                 .foregroundStyle(color.opacity(isSelected ? 0.5 : 0.25))
@@ -157,6 +170,48 @@ public struct MapEditorView: View {
                 .tint(color)
                 .tag(shape.id)
         }
+    }
+
+    /// While the selected feature's geometry is being edited, the outline should track the
+    /// working buffer rather than the last-saved shape, so drags/adds/reorders show immediately.
+    private func liveGeometry(for shape: MapEditorFeatureShape) -> MapEditorFeatureShape.Geometry {
+        switch shape.geometry {
+        case .polygon: .polygon(viewModel.editingCoordinates)
+        case .line: .line(viewModel.editingCoordinates)
+        case .point(let fallback): .point(viewModel.editingCoordinates.first ?? fallback)
+        }
+    }
+
+    @MapContentBuilder
+    private func geometryEditingContent(proxy: MapProxy) -> some MapContent {
+        ForEach(Array(viewModel.editingCoordinates.enumerated()), id: \.offset) { index, point in
+            Annotation("", coordinate: coordinate(point)) {
+                vertexHandle(number: index + 1)
+                    .gesture(
+                        DragGesture(minimumDistance: 0, coordinateSpace: .global)
+                            .onChanged { value in
+                                guard let coordinate = proxy.convert(value.location, from: .global) else { return }
+                                viewModel.moveGeometryPoint(
+                                    at: index,
+                                    to: Coordinate(latitude: coordinate.latitude, longitude: coordinate.longitude)
+                                )
+                            }
+                    )
+            }
+        }
+    }
+
+    private func vertexHandle(number: Int) -> some View {
+        ZStack {
+            Circle()
+                .fill(IMDFColor.accent)
+                .frame(width: 22, height: 22)
+                .shadow(radius: 1)
+            Text("\(number)")
+                .font(.caption2.weight(.bold))
+                .foregroundStyle(.white)
+        }
+        .contentShape(.rect)
     }
 
     private func coordinate(_ coordinate: Coordinate) -> CLLocationCoordinate2D {

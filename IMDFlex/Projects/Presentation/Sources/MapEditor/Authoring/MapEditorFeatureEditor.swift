@@ -112,6 +112,7 @@ public enum MapEditorFeatureEditor {
         feature: IMDFAuthoringFeature,
         name: String?,
         categoryValue: String?,
+        coordinates: [Coordinate]?,
         to venue: Venue?
     ) -> MapEditorFeatureEditorOutcome {
         guard var venue, feature != .relationship else { return .notFound }
@@ -129,6 +130,7 @@ public enum MapEditorFeatureEditor {
             if let category = category(VenueCategory.self, from: categoryValue) {
                 venue.category = category
             }
+            if let coordinates { venue.coordinates = coordinates }
             return .success(venue)
         case .building:
             guard let buildingIndex = buildingIndex(id: id, in: venue) else { return .notFound }
@@ -142,6 +144,7 @@ public enum MapEditorFeatureEditor {
             if let category = category(FootprintCategory.self, from: categoryValue) {
                 venue.buildings[buildingIndex].footprint?.category = category
             }
+            if let coordinates { venue.buildings[buildingIndex].footprint?.coordinates = coordinates }
             return .success(venue)
         case .level:
             guard let location = levelLocation(id: id, in: venue) else { return .notFound }
@@ -150,6 +153,9 @@ public enum MapEditorFeatureEditor {
             }
             if let category = category(LevelCategory.self, from: categoryValue) {
                 venue.buildings[location.buildingIndex].levels[location.levelIndex].category = category
+            }
+            if let coordinates {
+                venue.buildings[location.buildingIndex].levels[location.levelIndex].coordinates = coordinates
             }
             return .success(venue)
         case .unit:
@@ -162,12 +168,20 @@ public enum MapEditorFeatureEditor {
                 venue.buildings[location.buildingIndex].levels[location.levelIndex].units[location.unitIndex]
                     .category = category
             }
+            if let coordinates {
+                venue.buildings[location.buildingIndex].levels[location.levelIndex].units[location.unitIndex]
+                    .coordinates = coordinates
+            }
             return .success(venue)
         case .opening:
             guard let location = levelChildLocation(id: id, in: venue, children: \.openings) else { return .notFound }
             if let category = category(OpeningCategory.self, from: categoryValue) {
                 venue.buildings[location.buildingIndex].levels[location.levelIndex].openings[location.childIndex]
                     .category = category
+            }
+            if let coordinates {
+                venue.buildings[location.buildingIndex].levels[location.levelIndex].openings[location.childIndex]
+                    .coordinates = coordinates
             }
             return .success(venue)
         case .amenity:
@@ -180,9 +194,17 @@ public enum MapEditorFeatureEditor {
                 venue.buildings[location.buildingIndex].levels[location.levelIndex].units[location.unitIndex]
                     .amenities[location.childIndex].category = category
             }
+            if let coordinate = coordinates?.first {
+                venue.buildings[location.buildingIndex].levels[location.levelIndex].units[location.unitIndex]
+                    .amenities[location.childIndex].coordinate = coordinate
+            }
             return .success(venue)
         case .anchor:
-            guard unitChildLocation(id: id, in: venue, children: \Domain.Unit.anchors) != nil else { return .notFound }
+            guard let location = unitChildLocation(id: id, in: venue, children: \Domain.Unit.anchors) else { return .notFound }
+            if let coordinate = coordinates?.first {
+                venue.buildings[location.buildingIndex].levels[location.levelIndex].units[location.unitIndex]
+                    .anchors[location.childIndex].coordinate = coordinate
+            }
             return .success(venue)
         case .occupant:
             guard let location = unitChildLocation(id: id, in: venue, children: \.occupants) else { return .notFound }
@@ -201,6 +223,10 @@ public enum MapEditorFeatureEditor {
                 venue.buildings[location.buildingIndex].levels[location.levelIndex].details[location.childIndex]
                     .name = name.isEmpty ? nil : name
             }
+            if let coordinates {
+                venue.buildings[location.buildingIndex].levels[location.levelIndex].details[location.childIndex]
+                    .coordinates = coordinates
+            }
             return .success(venue)
         case .fixture:
             guard let location = levelChildLocation(id: id, in: venue, children: \.fixtures) else { return .notFound }
@@ -211,6 +237,10 @@ public enum MapEditorFeatureEditor {
             if let category = category(FixtureCategory.self, from: categoryValue) {
                 venue.buildings[location.buildingIndex].levels[location.levelIndex].fixtures[location.childIndex]
                     .category = category
+            }
+            if let coordinates {
+                venue.buildings[location.buildingIndex].levels[location.levelIndex].fixtures[location.childIndex]
+                    .coordinates = coordinates
             }
             return .success(venue)
         case .geofence:
@@ -223,12 +253,20 @@ public enum MapEditorFeatureEditor {
                 venue.buildings[location.buildingIndex].levels[location.levelIndex].geofences[location.childIndex]
                     .category = category
             }
+            if let coordinates {
+                venue.buildings[location.buildingIndex].levels[location.levelIndex].geofences[location.childIndex]
+                    .coordinates = coordinates
+            }
             return .success(venue)
         case .kiosk:
             guard let location = levelChildLocation(id: id, in: venue, children: \.kiosks) else { return .notFound }
             if let name {
                 venue.buildings[location.buildingIndex].levels[location.levelIndex].kiosks[location.childIndex]
                     .name = name.isEmpty ? nil : name
+            }
+            if let coordinates {
+                venue.buildings[location.buildingIndex].levels[location.levelIndex].kiosks[location.childIndex]
+                    .coordinates = coordinates
             }
             return .success(venue)
         case .relationship:
@@ -242,6 +280,10 @@ public enum MapEditorFeatureEditor {
             if let category = category(SectionCategory.self, from: categoryValue) {
                 venue.buildings[location.buildingIndex].levels[location.levelIndex].sections[location.childIndex]
                     .category = category
+            }
+            if let coordinates {
+                venue.buildings[location.buildingIndex].levels[location.levelIndex].sections[location.childIndex]
+                    .coordinates = coordinates
             }
             return .success(venue)
         }

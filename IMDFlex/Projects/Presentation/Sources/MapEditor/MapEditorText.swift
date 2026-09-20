@@ -34,6 +34,20 @@ enum MapEditorText {
         defaultValue: "Nothing to edit yet. Select a feature from the map or the list."
     )
 
+    static let points = localized("mapEditor.points.title", defaultValue: "Points")
+    static let addPoint = localized("mapEditor.points.addPoint", defaultValue: "Add point")
+    static let addingPoint = localized("mapEditor.points.addingPoint", defaultValue: "Tap the map to add a point")
+    static let advanced = localized("mapEditor.points.advanced", defaultValue: "Advanced")
+    static let reorderPoints = localized("mapEditor.points.reorder", defaultValue: "Reorder points")
+    static let moveUp = localized("mapEditor.points.moveUp", defaultValue: "Move up")
+    static let moveDown = localized("mapEditor.points.moveDown", defaultValue: "Move down")
+
+    private static let pointFormat = localized("mapEditor.points.pointFormat", defaultValue: "Point %1$lld")
+
+    static func point(number: Int) -> String {
+        String(format: pointFormat, locale: .current, number)
+    }
+
     static let alertOK = localized("mapEditor.alert.ok", defaultValue: "OK")
     static let missingParentAlertTitle = localized(
         "mapEditor.alert.missingParent.title",

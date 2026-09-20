@@ -11,6 +11,8 @@ public final class MapEditorViewModel {
     public private(set) var selectedShapeID: UUID?
     public private(set) var editingName: String = ""
     public private(set) var editingCategoryValue: String?
+    public private(set) var editingCoordinates: [Coordinate] = []
+    public private(set) var isAddingGeometryPoint = false
 
     public let authoringState: FeatureAuthoringToolState
 
@@ -69,7 +71,14 @@ public final class MapEditorViewModel {
         let contract = shape.feature.contract
         let hasRequiredName = !contract.requiresName || !editingName.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty
         let hasRequiredCategory = !contract.requiresCategory || editingCategoryValue != nil
-        return hasRequiredName && hasRequiredCategory
+        let hasRequiredGeometry = contract.geometry == .form
+            || editingCoordinates.count >= contract.geometry.minimumPointCount
+        return hasRequiredName && hasRequiredCategory && hasRequiredGeometry
+    }
+
+    public var canEditSelectedFeatureGeometry: Bool {
+        guard let shape = selectedShape else { return false }
+        return shape.feature.contract.geometry != .form
     }
 
     public func setMode(_ mode: MapEditorMode) {
@@ -79,9 +88,18 @@ public final class MapEditorViewModel {
 
     public func select(id: UUID) {
         selectedShapeID = id
+        isAddingGeometryPoint = false
 
-        guard let shape = selectedShape,
-              let values = MapEditorFeatureEditor.currentValues(id: id, feature: shape.feature, in: project.venue) else {
+        guard let shape = selectedShape else {
+            editingName = ""
+            editingCategoryValue = nil
+            editingCoordinates = []
+            return
+        }
+
+        editingCoordinates = coordinates(from: shape.geometry)
+
+        guard let values = MapEditorFeatureEditor.currentValues(id: id, feature: shape.feature, in: project.venue) else {
             editingName = ""
             editingCategoryValue = nil
             return
@@ -95,6 +113,8 @@ public final class MapEditorViewModel {
         selectedShapeID = nil
         editingName = ""
         editingCategoryValue = nil
+        editingCoordinates = []
+        isAddingGeometryPoint = false
     }
 
     public func setEditingName(_ name: String) {
@@ -105,6 +125,37 @@ public final class MapEditorViewModel {
         editingCategoryValue = value
     }
 
+    public func setAddingGeometryPoint(_ isAdding: Bool) {
+        isAddingGeometryPoint = isAdding
+    }
+
+    public func appendGeometryPoint(_ coordinate: Coordinate) {
+        guard let shape = selectedShape else { return }
+
+        if shape.feature.contract.geometry == .point {
+            editingCoordinates = [coordinate]
+        } else {
+            editingCoordinates.append(coordinate)
+        }
+
+        isAddingGeometryPoint = false
+    }
+
+    public func moveGeometryPoint(at index: Int, to coordinate: Coordinate) {
+        guard editingCoordinates.indices.contains(index) else { return }
+        editingCoordinates[index] = coordinate
+    }
+
+    public func moveGeometryPointUp(at index: Int) {
+        guard editingCoordinates.indices.contains(index), index > 0 else { return }
+        editingCoordinates.swapAt(index, index - 1)
+    }
+
+    public func moveGeometryPointDown(at index: Int) {
+        guard editingCoordinates.indices.contains(index), index < editingCoordinates.count - 1 else { return }
+        editingCoordinates.swapAt(index, index + 1)
+    }
+
     public func saveSelectedFeatureEdits() async {
         guard let shape = selectedShape else { return }
 
@@ -113,6 +164,7 @@ public final class MapEditorViewModel {
             feature: shape.feature,
             name: MapEditorFeatureEditor.supportsNameField(shape.feature) ? editingName : nil,
             categoryValue: shape.feature.contract.requiresCategory ? editingCategoryValue : nil,
+            coordinates: canEditSelectedFeatureGeometry ? editingCoordinates : nil,
             to: project.venue
         )
 
@@ -183,5 +235,13 @@ public final class MapEditorViewModel {
 
     private func units(in venue: Venue) -> [Domain.Unit] {
         levels(in: venue).flatMap(\.units)
+    }
+
+    private func coordinates(from geometry: MapEditorFeatureShape.Geometry) -> [Coordinate] {
+        switch geometry {
+        case .polygon(let coordinates): coordinates
+        case .line(let coordinates): coordinates
+        case .point(let coordinate): [coordinate]
+        }
     }
 }

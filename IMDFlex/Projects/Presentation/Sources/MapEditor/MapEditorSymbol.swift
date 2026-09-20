@@ -10,6 +10,9 @@ enum MapEditorSymbol {
     static let remove = "minus"
     static let cancel = "xmark"
     static let finish = "checkmark"
+    static let addPoint = "plus"
+    static let moveUp = "chevron.up"
+    static let moveDown = "chevron.down"
 
     static func feature(_ feature: IMDFAuthoringFeature) -> String {
         switch feature {
