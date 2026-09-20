@@ -50,9 +50,15 @@ public enum IMDFAuthoringFeature: String, Codable, CaseIterable, Hashable, Ident
     public var contract: IMDFAuthoringContract {
         switch self {
         case .address:
-            .init(feature: self, geometry: .form)
+            .init(feature: self, geometry: .form, requiresName: true)
         case .venue:
-            .init(feature: self, geometry: .polygon, requiresCategory: true, categoryFeature: .venue)
+            .init(
+                feature: self,
+                geometry: .polygon,
+                requiresCategory: true,
+                requiresName: true,
+                categoryFeature: .venue
+            )
         case .building:
             .init(feature: self, geometry: .form, requiresCategory: true, categoryFeature: .building)
         case .footprint:
@@ -68,6 +74,7 @@ public enum IMDFAuthoringFeature: String, Codable, CaseIterable, Hashable, Ident
                 feature: self,
                 geometry: .polygon,
                 requiresCategory: true,
+                requiresName: true,
                 requiredReferences: [.building],
                 categoryFeature: .level
             )
@@ -102,6 +109,7 @@ public enum IMDFAuthoringFeature: String, Codable, CaseIterable, Hashable, Ident
                 feature: self,
                 geometry: .form,
                 requiresCategory: true,
+                requiresName: true,
                 requiredReferences: [.anchor],
                 categoryFeature: .occupant
             )
@@ -149,6 +157,7 @@ public struct IMDFAuthoringContract: Codable, Equatable, Sendable {
     public let feature: IMDFAuthoringFeature
     public let geometry: IMDFAuthoringGeometry
     public let requiresCategory: Bool
+    public let requiresName: Bool
     public let requiredReferences: [IMDFAuthoringReference]
     public let categoryFeature: IMDFCategoryFeature?
 
@@ -156,12 +165,14 @@ public struct IMDFAuthoringContract: Codable, Equatable, Sendable {
         feature: IMDFAuthoringFeature,
         geometry: IMDFAuthoringGeometry,
         requiresCategory: Bool = false,
+        requiresName: Bool = false,
         requiredReferences: [IMDFAuthoringReference] = [],
         categoryFeature: IMDFCategoryFeature? = nil
     ) {
         self.feature = feature
         self.geometry = geometry
         self.requiresCategory = requiresCategory
+        self.requiresName = requiresName
         self.requiredReferences = requiredReferences
         self.categoryFeature = categoryFeature
     }
@@ -172,18 +183,21 @@ public struct IMDFAuthoringContract: Codable, Equatable, Sendable {
 public final class FeatureAuthoringToolState {
     public private(set) var selectedFeature: IMDFAuthoringFeature
     public private(set) var drawingDraft: DrawingDraftState
-    public private(set) var hasSelectedCategory: Bool
+    public private(set) var selectedCategoryValue: String?
+    public private(set) var name: String
     public private(set) var satisfiedReferences: Set<IMDFAuthoringReference>
 
     public init(
         selectedFeature: IMDFAuthoringFeature = .unit,
         drawingDraft: DrawingDraftState? = nil,
-        hasSelectedCategory: Bool = false,
+        selectedCategoryValue: String? = nil,
+        name: String = "",
         satisfiedReferences: Set<IMDFAuthoringReference> = []
     ) {
         self.selectedFeature = selectedFeature
         self.drawingDraft = drawingDraft ?? DrawingDraftState(geometry: selectedFeature.contract.geometry)
-        self.hasSelectedCategory = hasSelectedCategory
+        self.selectedCategoryValue = selectedCategoryValue ?? Self.defaultCategoryValue(for: selectedFeature)
+        self.name = name
         self.satisfiedReferences = satisfiedReferences
     }
 
@@ -191,8 +205,12 @@ public final class FeatureAuthoringToolState {
         selectedFeature.contract
     }
 
+    public var hasSelectedCategory: Bool {
+        selectedCategoryValue != nil
+    }
+
     public var canFinish: Bool {
-        hasEnoughGeometry && hasRequiredCategory && hasRequiredReferences
+        hasEnoughGeometry && hasRequiredCategory && hasRequiredName && hasRequiredReferences
     }
 
     public var remainingPointCount: Int {
@@ -228,8 +246,12 @@ public final class FeatureAuthoringToolState {
         drawingDraft.removeLastCoordinate()
     }
 
-    public func setCategorySelected(_ isSelected: Bool) {
-        hasSelectedCategory = isSelected
+    public func selectCategory(_ value: String) {
+        selectedCategoryValue = value
+    }
+
+    public func setName(_ name: String) {
+        self.name = name
     }
 
     public func satisfyReference(_ reference: IMDFAuthoringReference) {
@@ -254,6 +276,14 @@ public final class FeatureAuthoringToolState {
         return drawingDraft.finish()
     }
 
+    /// Clears the draft after a successful finish while keeping the feature selection
+    /// and satisfied references, so authoring several instances of the same feature stays fast.
+    public func resetAfterFinish() {
+        drawingDraft.setGeometry(contract.geometry)
+        selectedCategoryValue = Self.defaultCategoryValue(for: selectedFeature)
+        name = ""
+    }
+
     private var hasEnoughGeometry: Bool {
         drawingDraft.canFinish
     }
@@ -262,13 +292,22 @@ public final class FeatureAuthoringToolState {
         !contract.requiresCategory || hasSelectedCategory
     }
 
+    private var hasRequiredName: Bool {
+        !contract.requiresName || !name.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty
+    }
+
     private var hasRequiredReferences: Bool {
         Set(contract.requiredReferences).isSubset(of: satisfiedReferences)
     }
 
     private func resetDraft() {
         drawingDraft.setGeometry(contract.geometry)
-        hasSelectedCategory = false
+        selectedCategoryValue = Self.defaultCategoryValue(for: selectedFeature)
+        name = ""
         satisfiedReferences = []
+    }
+
+    private static func defaultCategoryValue(for feature: IMDFAuthoringFeature) -> String? {
+        MapEditorCategoryOptions.options(for: feature).first
     }
 }

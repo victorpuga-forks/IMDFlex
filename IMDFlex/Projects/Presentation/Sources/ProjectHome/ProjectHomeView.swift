@@ -9,8 +9,11 @@ public struct ProjectHomeView: View {
     @State private var isPresentingCreateProject = false
     @State private var layoutMode: IMDFLayoutMode = .regular
 
-    public init(service: any ProjectHomeServicing) {
+    private let mapEditorService: any MapEditorServicing
+
+    public init(service: any ProjectHomeServicing, mapEditorService: any MapEditorServicing) {
         _viewModel = State(initialValue: ProjectHomeViewModel(service: service))
+        self.mapEditorService = mapEditorService
     }
 
     public var body: some View {
@@ -43,7 +46,8 @@ public struct ProjectHomeView: View {
             .navigationDestination(for: ProjectHomeRoute.self) { route in
                 ProjectHomeDestinationView(
                     route: route,
-                    projects: viewModel.projects
+                    projects: viewModel.projects,
+                    mapEditorService: mapEditorService
                 )
             }
             .sheet(isPresented: $isPresentingCreateProject) {

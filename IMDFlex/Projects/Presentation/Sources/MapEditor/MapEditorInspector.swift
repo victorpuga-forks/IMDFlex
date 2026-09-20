@@ -2,7 +2,7 @@ import DesignSystem
 import SwiftUI
 
 struct MapEditorInspector: View {
-    let state: FeatureAuthoringToolState
+    let viewModel: MapEditorViewModel
 
     var body: some View {
         IMDFPanel {
@@ -24,6 +24,18 @@ struct MapEditorInspector: View {
                     }
                     .systemImage(MapEditorSymbol.draftPoints)
 
+                    if state.contract.requiresName {
+                        IMDFInspectorRow(MapEditorText.name) {
+                            TextField(MapEditorText.namePlaceholder, text: nameBinding)
+                                .multilineTextAlignment(.trailing)
+                        }
+                    }
+
+                    IMDFInspectorRow(
+                        MapEditorText.saved,
+                        value: "\(viewModel.savedCount(for: state.selectedFeature))"
+                    )
+
                     IMDFInspectorRow(MapEditorText.status) {
                         IMDFStatusBadge(state.canFinish ? MapEditorText.ready : MapEditorText.draft)
                             .status(state.canFinish ? .success : .warning)
@@ -32,10 +44,20 @@ struct MapEditorInspector: View {
                     .systemImage(state.canFinish ? MapEditorSymbol.ready : MapEditorSymbol.draft)
                 }
 
-                MapEditorRequirementSection(state: state)
-                MapEditorDraftControls(state: state)
+                MapEditorRequirementSection(viewModel: viewModel)
+                MapEditorDraftControls(state: state) {
+                    await viewModel.finishDraft()
+                }
             }
         }
         .imdfPanelStyle(.inspector)
+    }
+
+    private var state: FeatureAuthoringToolState {
+        viewModel.authoringState
+    }
+
+    private var nameBinding: Binding<String> {
+        Binding(get: { state.name }, set: { state.setName($0) })
     }
 }

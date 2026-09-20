@@ -11,14 +11,35 @@ enum MapEditorText {
     static let draft = localized("mapEditor.status.draft", defaultValue: "Draft")
     static let requirements = localized("mapEditor.inspector.requirements", defaultValue: "Requirements")
     static let category = localized("mapEditor.requirement.category", defaultValue: "Category")
-    static let selected = localized("mapEditor.requirement.selected", defaultValue: "Selected")
-    static let required = localized("mapEditor.requirement.required", defaultValue: "Required")
     static let references = localized("mapEditor.requirement.references", defaultValue: "References")
     static let none = localized("mapEditor.requirement.none", defaultValue: "None")
     static let linked = localized("mapEditor.requirement.linked", defaultValue: "Linked")
     static let removePoint = localized("mapEditor.action.removePoint", defaultValue: "Remove point")
     static let cancelDraft = localized("mapEditor.action.cancelDraft", defaultValue: "Cancel draft")
     static let finishDraft = localized("mapEditor.action.finishDraft", defaultValue: "Finish draft")
+    static let name = localized("mapEditor.inspector.name", defaultValue: "Name")
+    static let namePlaceholder = localized("mapEditor.inspector.namePlaceholder", defaultValue: "Enter a name")
+    static let saved = localized("mapEditor.inspector.saved", defaultValue: "Saved")
+
+    static let alertOK = localized("mapEditor.alert.ok", defaultValue: "OK")
+    static let missingParentAlertTitle = localized(
+        "mapEditor.alert.missingParent.title",
+        defaultValue: "Add a parent feature first"
+    )
+    static let missingParentAlertMessage = localized(
+        "mapEditor.alert.missingParent.message",
+        defaultValue: "This feature needs another feature to exist first. Check the References requirement above, add that feature, then finish this draft again."
+    )
+    static let unsupportedAlertTitle = localized("mapEditor.alert.unsupported.title", defaultValue: "Not supported yet")
+    static let unsupportedAlertMessage = localized(
+        "mapEditor.alert.unsupported.message",
+        defaultValue: "This feature type can't be finished from the map editor yet."
+    )
+    static let saveFailedAlertTitle = localized("mapEditor.alert.saveFailed.title", defaultValue: "Couldn't save")
+    static let saveFailedAlertMessage = localized(
+        "mapEditor.alert.saveFailed.message",
+        defaultValue: "Your change couldn't be saved. Try again."
+    )
 
     static let address = localized("mapEditor.feature.address", defaultValue: "Address")
     static let venue = localized("mapEditor.feature.venue", defaultValue: "Venue")
@@ -56,6 +77,22 @@ enum MapEditorText {
 
     static func referenceList(_ references: [String]) -> String {
         references.formatted(.list(type: .and, width: .narrow))
+    }
+
+    static func alertTitle(for alert: MapEditorAlert) -> String {
+        switch alert {
+        case .missingParent: missingParentAlertTitle
+        case .unsupported: unsupportedAlertTitle
+        case .saveFailed: saveFailedAlertTitle
+        }
+    }
+
+    static func alertMessage(for alert: MapEditorAlert) -> String {
+        switch alert {
+        case .missingParent: missingParentAlertMessage
+        case .unsupported: unsupportedAlertMessage
+        case .saveFailed: saveFailedAlertMessage
+        }
     }
 
     private static func localized(

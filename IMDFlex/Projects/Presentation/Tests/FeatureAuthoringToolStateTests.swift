@@ -90,10 +90,25 @@ final class FeatureAuthoringToolStateTests: XCTestCase {
         XCTAssertEqual(referencesByFeature[.relationship], [.relationshipEndpoints])
     }
 
+    func test_whenFeatureRequiresAName_thenContractExposesRequiresName() {
+        // Given
+        let requiresName: [IMDFAuthoringFeature] = [.venue, .level, .occupant, .address]
+        let doesNotRequireName: [IMDFAuthoringFeature] = [.building, .unit, .anchor]
+
+        // Then
+        for feature in requiresName {
+            XCTAssertTrue(feature.contract.requiresName, "\(feature) should require a name")
+        }
+
+        for feature in doesNotRequireName {
+            XCTAssertFalse(feature.contract.requiresName, "\(feature) should not require a name")
+        }
+    }
+
     func test_whenPolygonFeatureHasTooFewPoints_thenStateCannotFinish() {
         // Given
         let sut = makeSUT(selectedFeature: .unit)
-        sut.setCategorySelected(true)
+        sut.selectCategory(UnitCategory.room.rawValue)
         sut.satisfyReference(.level)
 
         // When
@@ -110,7 +125,7 @@ final class FeatureAuthoringToolStateTests: XCTestCase {
         let sut = makeSUT(selectedFeature: .unit)
 
         // When
-        sut.setCategorySelected(true)
+        sut.selectCategory(UnitCategory.room.rawValue)
         sut.satisfyReference(.level)
         sut.appendDraftCoordinate(.fixture(longitude: 127.0, latitude: 37.0))
         sut.appendDraftCoordinate(.fixture(longitude: 127.1, latitude: 37.0))
@@ -121,18 +136,37 @@ final class FeatureAuthoringToolStateTests: XCTestCase {
         XCTAssertEqual(sut.draftedCoordinates.map(\.geoJSONPosition), [[127.0, 37.0], [127.1, 37.0], [127.1, 37.1]])
     }
 
-    func test_whenFormFeatureHasRequiredCategoryAndReference_thenStateCanFinishWithoutPoints() {
+    func test_whenFormFeatureHasRequiredCategoryReferenceAndName_thenStateCanFinishWithoutPoints() {
         // Given
         let sut = makeSUT(selectedFeature: .occupant)
 
         // When
-        sut.setCategorySelected(true)
+        sut.selectCategory(OccupantCategory.restaurant.rawValue)
         sut.satisfyReference(.anchor)
+        sut.setName("Noodle Bar")
 
         // Then
         XCTAssertTrue(sut.canFinish)
         XCTAssertEqual(sut.draftedPointCount, 0)
         XCTAssertEqual(sut.remainingPointCount, 0)
+    }
+
+    func test_whenRequiredNameIsMissing_thenStateCannotFinishEvenWithCategoryAndReferences() {
+        // Given
+        let sut = makeSUT(selectedFeature: .level)
+        sut.selectCategory(LevelCategory.parking.rawValue)
+        sut.satisfyReference(.building)
+        sut.appendDraftCoordinate(.fixture(longitude: 127.0, latitude: 37.0))
+        sut.appendDraftCoordinate(.fixture(longitude: 127.1, latitude: 37.0))
+        sut.appendDraftCoordinate(.fixture(longitude: 127.1, latitude: 37.1))
+
+        // When
+        let canFinishWithoutName = sut.canFinish
+        sut.setName("Parking Level")
+
+        // Then
+        XCTAssertFalse(canFinishWithoutName)
+        XCTAssertTrue(sut.canFinish)
     }
 
     func test_whenFeatureRequiresReferences_thenMissingReferencesExposeOnlyUnsatisfiedReferences() {
@@ -157,22 +191,24 @@ final class FeatureAuthoringToolStateTests: XCTestCase {
         XCTAssertTrue(sut.missingReferences.isEmpty)
     }
 
-    func test_whenCategoryIsRequiredButNotSelected_thenCategoryIsNotSatisfied() {
+    func test_whenCategoryIsRequired_thenCategoryDefaultsToTheFirstAvailableOption() {
         // Given
         let sut = makeSUT(selectedFeature: .amenity)
 
         // When
-        let isCategorySatisfied = sut.isCategorySatisfied
+        let defaultValue = MapEditorCategoryOptions.options(for: .amenity).first
 
         // Then
-        XCTAssertFalse(isCategorySatisfied)
+        XCTAssertTrue(sut.isCategorySatisfied)
+        XCTAssertEqual(sut.selectedCategoryValue, defaultValue)
     }
 
     func test_whenFeatureSelectionChanges_thenDraftStateIsReset() {
         // Given
         let sut = makeSUT(selectedFeature: .unit)
-        sut.setCategorySelected(true)
+        sut.selectCategory(UnitCategory.room.rawValue)
         sut.satisfyReference(.level)
+        sut.setName("Should be cleared")
         sut.appendDraftCoordinate(.fixture(longitude: 127.0, latitude: 37.0))
         sut.appendDraftCoordinate(.fixture(longitude: 127.1, latitude: 37.0))
 
@@ -183,14 +219,15 @@ final class FeatureAuthoringToolStateTests: XCTestCase {
         XCTAssertEqual(sut.selectedFeature, .amenity)
         XCTAssertEqual(sut.draftedPointCount, 0)
         XCTAssertEqual(sut.drawingDraft.geometry, .point)
-        XCTAssertFalse(sut.hasSelectedCategory)
+        XCTAssertEqual(sut.name, "")
+        XCTAssertEqual(sut.selectedCategoryValue, MapEditorCategoryOptions.options(for: .amenity).first)
         XCTAssertTrue(sut.satisfiedReferences.isEmpty)
     }
 
     func test_whenDraftIsCancelled_thenSelectionIsKeptAndDraftStateIsReset() {
         // Given
         let sut = makeSUT(selectedFeature: .opening)
-        sut.setCategorySelected(true)
+        sut.selectCategory(OpeningCategory.automobile.rawValue)
         sut.satisfyReference(.level)
         sut.appendDraftCoordinate(.fixture())
 
@@ -201,7 +238,7 @@ final class FeatureAuthoringToolStateTests: XCTestCase {
         XCTAssertEqual(sut.selectedFeature, .opening)
         XCTAssertEqual(sut.draftedPointCount, 0)
         XCTAssertEqual(sut.drawingDraft.geometry, .line)
-        XCTAssertFalse(sut.hasSelectedCategory)
+        XCTAssertEqual(sut.selectedCategoryValue, MapEditorCategoryOptions.options(for: .opening).first)
         XCTAssertTrue(sut.satisfiedReferences.isEmpty)
     }
 
@@ -210,7 +247,7 @@ final class FeatureAuthoringToolStateTests: XCTestCase {
         let sut = makeSUT(selectedFeature: .opening)
         let first = IMDFDraftCoordinate.fixture(longitude: 127.0, latitude: 37.0)
         let second = IMDFDraftCoordinate.fixture(longitude: 127.1, latitude: 37.1)
-        sut.setCategorySelected(true)
+        sut.selectCategory(OpeningCategory.automobile.rawValue)
         sut.satisfyReference(.level)
         sut.appendDraftCoordinate(first)
         sut.appendDraftCoordinate(second)
@@ -221,6 +258,25 @@ final class FeatureAuthoringToolStateTests: XCTestCase {
         // Then
         XCTAssertEqual(result.geometry, .line)
         XCTAssertEqual(result.coordinates, [first, second])
+    }
+
+    func test_whenDraftFinishesSuccessfully_thenResetAfterFinishKeepsFeatureAndReferencesButClearsDraft() {
+        // Given
+        let sut = makeSUT(selectedFeature: .opening)
+        sut.selectCategory(OpeningCategory.automobile.rawValue)
+        sut.satisfyReference(.level)
+        sut.appendDraftCoordinate(.fixture())
+        sut.appendDraftCoordinate(.fixture())
+
+        // When
+        sut.resetAfterFinish()
+
+        // Then
+        XCTAssertEqual(sut.selectedFeature, .opening)
+        XCTAssertEqual(sut.draftedPointCount, 0)
+        XCTAssertEqual(sut.selectedCategoryValue, MapEditorCategoryOptions.options(for: .opening).first)
+        XCTAssertEqual(sut.name, "")
+        XCTAssertEqual(sut.satisfiedReferences, [.level])
     }
 
     private func makeSUT(selectedFeature: IMDFAuthoringFeature = .unit) -> FeatureAuthoringToolState {

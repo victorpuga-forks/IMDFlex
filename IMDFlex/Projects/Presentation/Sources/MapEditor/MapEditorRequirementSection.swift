@@ -2,16 +2,20 @@ import DesignSystem
 import SwiftUI
 
 struct MapEditorRequirementSection: View {
-    let state: FeatureAuthoringToolState
+    let viewModel: MapEditorViewModel
 
     var body: some View {
         IMDFInspectorSection(title: MapEditorText.requirements) {
             if state.contract.requiresCategory {
-                IMDFInspectorActionRow(MapEditorText.category) {
-                    state.setCategorySelected(!state.hasSelectedCategory)
+                IMDFInspectorRow(MapEditorText.category) {
+                    Picker(MapEditorText.category, selection: categoryBinding) {
+                        ForEach(MapEditorCategoryOptions.options(for: state.selectedFeature), id: \.self) { value in
+                            Text(value).tag(value)
+                        }
+                    }
+                    .pickerStyle(.menu)
+                    .labelsHidden()
                 }
-                .value(state.hasSelectedCategory ? MapEditorText.selected : MapEditorText.required)
-                .complete(state.hasSelectedCategory)
             }
 
             if state.contract.requiredReferences.isEmpty {
@@ -29,5 +33,20 @@ struct MapEditorRequirementSection: View {
                 .complete(state.missingReferences.isEmpty)
             }
         }
+    }
+
+    private var state: FeatureAuthoringToolState {
+        viewModel.authoringState
+    }
+
+    private var categoryBinding: Binding<String> {
+        Binding(
+            get: {
+                state.selectedCategoryValue
+                    ?? MapEditorCategoryOptions.options(for: state.selectedFeature).first
+                    ?? ""
+            },
+            set: { state.selectCategory($0) }
+        )
     }
 }

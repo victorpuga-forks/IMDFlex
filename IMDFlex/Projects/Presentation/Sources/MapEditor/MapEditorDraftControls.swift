@@ -3,6 +3,7 @@ import SwiftUI
 
 struct MapEditorDraftControls: View {
     let state: FeatureAuthoringToolState
+    let onFinish: () async -> Void
 
     var body: some View {
         HStack(spacing: IMDFSpacing.sm) {
@@ -19,7 +20,9 @@ struct MapEditorDraftControls: View {
                 MapEditorText.finishDraft,
                 systemImage: MapEditorSymbol.finish
             ) {
-                _ = state.finishDrawingDraft()
+                Task {
+                    await onFinish()
+                }
             }
             .role(.primary)
             .disabled(!state.canFinish)
