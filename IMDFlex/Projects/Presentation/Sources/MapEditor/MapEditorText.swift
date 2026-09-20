@@ -16,7 +16,6 @@ enum MapEditorText {
     static let references = localized("mapEditor.requirement.references", defaultValue: "References")
     static let none = localized("mapEditor.requirement.none", defaultValue: "None")
     static let linked = localized("mapEditor.requirement.linked", defaultValue: "Linked")
-    static let addPoint = localized("mapEditor.action.addPoint", defaultValue: "Add point")
     static let removePoint = localized("mapEditor.action.removePoint", defaultValue: "Remove point")
     static let cancelDraft = localized("mapEditor.action.cancelDraft", defaultValue: "Cancel draft")
     static let finishDraft = localized("mapEditor.action.finishDraft", defaultValue: "Finish draft")

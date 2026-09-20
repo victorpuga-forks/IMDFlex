@@ -6,11 +6,6 @@ struct MapEditorDraftControls: View {
 
     var body: some View {
         HStack(spacing: IMDFSpacing.sm) {
-            IMDFToolButton(MapEditorText.addPoint, systemImage: MapEditorSymbol.add) {
-                state.addDraftPoint()
-            }
-            .disabled(state.contract.geometry == .form)
-
             IMDFToolButton(MapEditorText.removePoint, systemImage: MapEditorSymbol.remove) {
                 state.removeLastDraftPoint()
             }

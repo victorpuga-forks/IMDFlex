@@ -30,7 +30,9 @@ struct CreateProjectSheet: View {
             }
             .padding(IMDFSpacing.xl)
             .navigationTitle(ProjectHomeText.createTitle)
+            #if os(iOS)
             .navigationBarTitleDisplayMode(.inline)
+            #endif
             .toolbar {
                 ToolbarItem(placement: .cancellationAction) {
                     Button(ProjectHomeText.cancel, action: dismiss.callAsFunction)

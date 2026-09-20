@@ -97,8 +97,8 @@ final class FeatureAuthoringToolStateTests: XCTestCase {
         sut.satisfyReference(.level)
 
         // When
-        sut.addDraftPoint()
-        sut.addDraftPoint()
+        sut.appendDraftCoordinate(.fixture())
+        sut.appendDraftCoordinate(.fixture())
 
         // Then
         XCTAssertFalse(sut.canFinish)

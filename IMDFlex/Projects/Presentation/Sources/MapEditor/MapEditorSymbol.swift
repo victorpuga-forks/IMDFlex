@@ -7,7 +7,6 @@ enum MapEditorSymbol {
     static let readyFilled = "checkmark.circle.fill"
     static let draft = "clock"
     static let draftFilled = "clock.fill"
-    static let add = "plus"
     static let remove = "minus"
     static let cancel = "xmark"
     static let finish = "checkmark"

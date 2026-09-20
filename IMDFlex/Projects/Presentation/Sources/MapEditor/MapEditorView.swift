@@ -15,9 +15,20 @@ public struct MapEditorView: View {
 
     public var body: some View {
         ZStack {
-            Map(position: $cameraPosition)
-                .mapStyle(.standard)
-                .ignoresSafeArea(edges: .bottom)
+            MapReader { proxy in
+                Map(position: $cameraPosition)
+                    .mapStyle(.standard)
+                    .onTapGesture(coordinateSpace: .local) { screenPoint in
+                        guard let coordinate = proxy.convert(screenPoint, from: .local) else { return }
+                        authoringState.appendDraftCoordinate(
+                            IMDFDraftCoordinate(
+                                longitude: coordinate.longitude,
+                                latitude: coordinate.latitude
+                            )
+                        )
+                    }
+            }
+            .ignoresSafeArea(edges: .bottom)
 
             VStack(spacing: IMDFSpacing.md) {
                 HStack(alignment: .top, spacing: IMDFSpacing.md) {

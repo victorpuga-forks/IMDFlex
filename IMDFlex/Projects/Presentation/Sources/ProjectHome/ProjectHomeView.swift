@@ -29,12 +29,14 @@ public struct ProjectHomeView: View {
                 onRetry: retryLoading
             )
             .navigationTitle(ProjectHomeText.navigationTitle)
+            #if os(iOS)
             .navigationBarTitleDisplayMode(.inline)
             .searchable(
                 text: $bindableViewModel.searchQuery,
                 placement: .navigationBarDrawer(displayMode: .always),
                 prompt: ProjectHomeText.searchPrompt
             )
+            #endif
             .toolbar {
                 ProjectHomeToolbar(onCreateProject: presentCreateProject)
             }

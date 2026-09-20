@@ -220,10 +220,6 @@ public final class FeatureAuthoringToolState {
         resetDraft()
     }
 
-    public func addDraftPoint() {
-        appendDraftCoordinate(.placeholder)
-    }
-
     public func appendDraftCoordinate(_ coordinate: IMDFDraftCoordinate) {
         drawingDraft.append(coordinate)
     }
@@ -275,8 +271,4 @@ public final class FeatureAuthoringToolState {
         hasSelectedCategory = false
         satisfiedReferences = []
     }
-}
-
-private extension IMDFDraftCoordinate {
-    static let placeholder = IMDFDraftCoordinate(longitude: 0, latitude: 0)
 }
