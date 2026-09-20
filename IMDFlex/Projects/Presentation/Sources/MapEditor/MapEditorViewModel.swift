@@ -174,6 +174,11 @@ public final class MapEditorViewModel {
         guard editingCoordinates.indices.contains(index), index < editingCoordinates.count - 1 else { return }
         editingCoordinates.swapAt(index, index + 1)
     }
+  
+    public func removeGeometryPoint(at index: Int) {
+        guard editingCoordinates.indices.contains(index) else { return }
+        editingCoordinates.remove(at: index)
+    }
 
     public func saveSelectedFeatureEdits() async {
         guard let shape = selectedShape else { return }

@@ -71,39 +71,34 @@ struct MapEditorFeatureDetailPanel: View {
 
     private var geometrySection: some View {
         VStack(alignment: .leading, spacing: IMDFSpacing.md) {
-            IMDFInspectorSection(title: MapEditorText.points) {
-                ForEach(Array(viewModel.editingCoordinates.enumerated()), id: \.offset) { index, coordinate in
-                    IMDFInspectorRow(MapEditorText.point(number: index + 1), value: coordinateText(coordinate))
-                }
-            }
-
-            IMDFToolButton(
-                viewModel.isAddingGeometryPoint ? MapEditorText.addingPoint : MapEditorText.addPoint,
-                systemImage: MapEditorSymbol.addPoint
-            ) {
-                viewModel.setAddingGeometryPoint(!viewModel.isAddingGeometryPoint)
-            }
-            .selected(viewModel.isAddingGeometryPoint)
-
-            if viewModel.editingCoordinates.count > 1 {
-                DisclosureGroup(MapEditorText.advanced, isExpanded: $isAdvancedExpanded) {
-                    VStack(spacing: IMDFSpacing.xs) {
-                        ForEach(Array(viewModel.editingCoordinates.enumerated()), id: \.offset) { index, _ in
-                            reorderRow(number: index + 1, index: index)
-                        }
+            DisclosureGroup(MapEditorText.advanced, isExpanded: $isAdvancedExpanded) {
+                IMDFInspectorSection(title: MapEditorText.points) {
+                    ForEach(Array(viewModel.editingCoordinates.enumerated()), id: \.offset) { index, item in
+                        reorderRow(number: index + 1, index: index, coordinate: item)
                     }
-                    .padding(.top, IMDFSpacing.sm)
+
+                    IMDFToolButton(
+                        viewModel.isAddingGeometryPoint ? MapEditorText.addingPoint : MapEditorText.addPoint,
+                        systemImage: MapEditorSymbol.addPoint
+                    ) {
+                        viewModel.setAddingGeometryPoint(!viewModel.isAddingGeometryPoint)
+                    }
+                    .selected(viewModel.isAddingGeometryPoint)
                 }
-                .font(IMDFFont.inspectorLabel)
+                .padding(.top, IMDFSpacing.sm)
             }
         }
     }
 
-    private func reorderRow(number: Int, index: Int) -> some View {
+    private func reorderRow(number: Int, index: Int, coordinate: Coordinate) -> some View {
         HStack {
             Text(MapEditorText.point(number: number))
                 .font(IMDFFont.inspectorLabel)
                 .foregroundStyle(.secondary)
+          
+            Text(coordinateText(coordinate))
+              .font(IMDFFont.inspectorValue)
+              .foregroundStyle(.primary)
 
             Spacer()
 
@@ -116,6 +111,14 @@ struct MapEditorFeatureDetailPanel: View {
                 viewModel.moveGeometryPointDown(at: index)
             }
             .disabled(index == viewModel.editingCoordinates.count - 1)
+
+          if let shape = viewModel.selectedShape {
+            IMDFToolButton(MapEditorText.removePoint, systemImage: MapEditorSymbol.remove) {
+              viewModel.removeGeometryPoint(at: index)
+            }
+            .role(.destructive)
+            .disabled(viewModel.editingCoordinates.count <= shape.feature.contract.geometry.minimumPointCount)
+          }
         }
     }
 
