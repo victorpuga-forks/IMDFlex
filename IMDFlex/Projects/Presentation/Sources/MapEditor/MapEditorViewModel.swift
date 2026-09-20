@@ -7,6 +7,10 @@ import Domain
 public final class MapEditorViewModel {
     public private(set) var project: IMDFProject
     public private(set) var alert: MapEditorAlert?
+    public private(set) var mode: MapEditorMode = .insert
+    public private(set) var selectedShapeID: UUID?
+    public private(set) var editingName: String = ""
+    public private(set) var editingCategoryValue: String?
 
     public let authoringState: FeatureAuthoringToolState
 
@@ -36,7 +40,9 @@ public final class MapEditorViewModel {
 
         switch outcome {
         case .success(let venue):
-            await save(venue)
+            if await save(venue) {
+                authoringState.resetAfterFinish()
+            }
         case .missingParent:
             alert = .missingParent
         case .unsupported:
@@ -46,6 +52,76 @@ public final class MapEditorViewModel {
 
     public func dismissAlert() {
         alert = nil
+    }
+
+    public var featureShapes: [MapEditorFeatureShape] {
+        MapEditorFeatureShapeBuilder.shapes(for: project.venue)
+    }
+
+    public var selectedShape: MapEditorFeatureShape? {
+        guard let selectedShapeID else { return nil }
+        return featureShapes.first { $0.id == selectedShapeID }
+    }
+
+    public var canSaveSelectedFeatureEdits: Bool {
+        guard let shape = selectedShape else { return false }
+
+        let contract = shape.feature.contract
+        let hasRequiredName = !contract.requiresName || !editingName.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty
+        let hasRequiredCategory = !contract.requiresCategory || editingCategoryValue != nil
+        return hasRequiredName && hasRequiredCategory
+    }
+
+    public func setMode(_ mode: MapEditorMode) {
+        self.mode = mode
+        clearSelection()
+    }
+
+    public func select(id: UUID) {
+        selectedShapeID = id
+
+        guard let shape = selectedShape,
+              let values = MapEditorFeatureEditor.currentValues(id: id, feature: shape.feature, in: project.venue) else {
+            editingName = ""
+            editingCategoryValue = nil
+            return
+        }
+
+        editingName = values.name ?? ""
+        editingCategoryValue = values.categoryValue
+    }
+
+    public func clearSelection() {
+        selectedShapeID = nil
+        editingName = ""
+        editingCategoryValue = nil
+    }
+
+    public func setEditingName(_ name: String) {
+        editingName = name
+    }
+
+    public func selectEditingCategory(_ value: String) {
+        editingCategoryValue = value
+    }
+
+    public func saveSelectedFeatureEdits() async {
+        guard let shape = selectedShape else { return }
+
+        let outcome = MapEditorFeatureEditor.apply(
+            id: shape.id,
+            feature: shape.feature,
+            name: MapEditorFeatureEditor.supportsNameField(shape.feature) ? editingName : nil,
+            categoryValue: shape.feature.contract.requiresCategory ? editingCategoryValue : nil,
+            to: project.venue
+        )
+
+        switch outcome {
+        case .success(let venue):
+            await save(venue)
+        case .notFound:
+            clearSelection()
+        }
     }
 
     public func savedCount(for feature: IMDFAuthoringFeature) -> Int {
@@ -87,15 +163,17 @@ public final class MapEditorViewModel {
         }
     }
 
-    private func save(_ venue: Venue) async {
+    @discardableResult
+    private func save(_ venue: Venue) async -> Bool {
         project.venue = venue
         project.updatedAt = Date()
 
         do {
             try await service.updateProject(project)
-            authoringState.resetAfterFinish()
+            return true
         } catch {
             alert = .saveFailed
+            return false
         }
     }
 

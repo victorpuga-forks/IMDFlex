@@ -21,6 +21,19 @@ enum MapEditorText {
     static let namePlaceholder = localized("mapEditor.inspector.namePlaceholder", defaultValue: "Enter a name")
     static let saved = localized("mapEditor.inspector.saved", defaultValue: "Saved")
 
+    static let mode = localized("mapEditor.accessibility.mode", defaultValue: "Editor mode")
+    static let insertMode = localized("mapEditor.mode.insert", defaultValue: "Insert")
+    static let viewMode = localized("mapEditor.mode.view", defaultValue: "View")
+
+    static let sidebarTitle = localized("mapEditor.sidebar.title", defaultValue: "Features")
+    static let sidebarEmpty = localized("mapEditor.sidebar.empty", defaultValue: "No features yet")
+
+    static let save = localized("mapEditor.action.save", defaultValue: "Save")
+    static let nothingToEdit = localized(
+        "mapEditor.detail.nothingToEdit",
+        defaultValue: "Nothing to edit yet. Select a feature from the map or the list."
+    )
+
     static let alertOK = localized("mapEditor.alert.ok", defaultValue: "OK")
     static let missingParentAlertTitle = localized(
         "mapEditor.alert.missingParent.title",

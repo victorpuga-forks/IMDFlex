@@ -40,6 +40,15 @@ extension IMDFAuthoringGeometry {
     }
 }
 
+extension MapEditorMode {
+    var title: String {
+        switch self {
+        case .insert: MapEditorText.insertMode
+        case .view: MapEditorText.viewMode
+        }
+    }
+}
+
 extension IMDFAuthoringReference {
     var title: String {
         switch self {

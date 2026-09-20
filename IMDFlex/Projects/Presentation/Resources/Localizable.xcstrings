@@ -18,6 +18,23 @@
         }
       }
     },
+    "mapEditor.accessibility.mode" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Editor mode"
+          }
+        },
+        "ko" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "편집기 모드"
+          }
+        }
+      }
+    },
     "mapEditor.action.addPoint" : {
       "extractionState" : "manual",
       "localizations" : {
@@ -99,6 +116,23 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "점 제거"
+          }
+        }
+      }
+    },
+    "mapEditor.action.save" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Save"
+          }
+        },
+        "ko" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "저장"
           }
         }
       }
@@ -235,6 +269,23 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "아직 지원되지 않음"
+          }
+        }
+      }
+    },
+    "mapEditor.detail.nothingToEdit" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Nothing to edit yet. Select a feature from the map or the list."
+          }
+        },
+        "ko" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "아직 편집할 항목이 없습니다. 지도나 목록에서 기능을 선택하세요."
           }
         }
       }
@@ -715,6 +766,40 @@
         }
       }
     },
+    "mapEditor.mode.insert" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Insert"
+          }
+        },
+        "ko" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "삽입"
+          }
+        }
+      }
+    },
+    "mapEditor.mode.view" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "View"
+          }
+        },
+        "ko" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "보기"
+          }
+        }
+      }
+    },
     "mapEditor.reference.endpoints" : {
       "extractionState" : "manual",
       "localizations" : {
@@ -813,6 +898,40 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "참조"
+          }
+        }
+      }
+    },
+    "mapEditor.sidebar.empty" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "No features yet"
+          }
+        },
+        "ko" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "아직 기능이 없습니다"
+          }
+        }
+      }
+    },
+    "mapEditor.sidebar.title" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Features"
+          }
+        },
+        "ko" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "기능"
           }
         }
       }
