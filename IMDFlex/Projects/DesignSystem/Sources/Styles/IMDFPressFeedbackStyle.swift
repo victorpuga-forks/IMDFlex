@@ -4,8 +4,13 @@ struct IMDFPressFeedbackStyle: ButtonStyle {
     @Environment(\.accessibilityReduceMotion) private var systemReduceMotion
     @Environment(\.imdfMotionMode) private var motionMode
 
+    var minWidth: CGFloat? = nil
+    var minHeight: CGFloat? = nil
+
     func makeBody(configuration: Configuration) -> some View {
         configuration.label
+            .frame(minWidth: minWidth, minHeight: minHeight)
+            .contentShape(Rectangle())
             .opacity(configuration.isPressed ? 0.64 : 1)
             .scaleEffect(pressedScale(configuration: configuration))
             .animation(pressAnimation, value: configuration.isPressed)

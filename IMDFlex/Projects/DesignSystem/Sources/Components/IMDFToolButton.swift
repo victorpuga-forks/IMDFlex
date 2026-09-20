@@ -30,11 +30,12 @@ public struct IMDFToolButton: View {
         )
             .labelStyle(.iconOnly)
             .font(.system(size: IMDFIconSize.regular, weight: .semibold))
-            .frame(
+            .buttonStyle(
+              IMDFPressFeedbackStyle(
                 minWidth: IMDFControlMetrics.minimumHitSize,
                 minHeight: IMDFControlMetrics.minimumHitSize
+              )
             )
-            .buttonStyle(IMDFPressFeedbackStyle())
             .background(backgroundStyle)
             .foregroundStyle(foregroundStyle)
             .overlay {
