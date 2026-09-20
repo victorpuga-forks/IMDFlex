@@ -5,12 +5,13 @@ struct ProjectHomeDestinationView: View {
     let route: ProjectHomeRoute
     let projects: [IMDFProject]
     let mapEditorService: any MapEditorServicing
+    let mapEditorExportService: any MapEditorExportServicing
 
     var body: some View {
         switch route {
         case .workspace(let projectID):
             if let project = projects.first(where: { $0.id == projectID }) {
-                MapEditorView(project: project, service: mapEditorService)
+                MapEditorView(project: project, service: mapEditorService, exportService: mapEditorExportService)
             } else {
                 ContentUnavailableView(
                     ProjectHomeText.workspaceUnavailable,

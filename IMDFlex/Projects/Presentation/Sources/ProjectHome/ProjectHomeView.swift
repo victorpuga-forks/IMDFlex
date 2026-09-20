@@ -10,10 +10,16 @@ public struct ProjectHomeView: View {
     @State private var layoutMode: IMDFLayoutMode = .regular
 
     private let mapEditorService: any MapEditorServicing
+    private let mapEditorExportService: any MapEditorExportServicing
 
-    public init(service: any ProjectHomeServicing, mapEditorService: any MapEditorServicing) {
+    public init(
+        service: any ProjectHomeServicing,
+        mapEditorService: any MapEditorServicing,
+        mapEditorExportService: any MapEditorExportServicing
+    ) {
         _viewModel = State(initialValue: ProjectHomeViewModel(service: service))
         self.mapEditorService = mapEditorService
+        self.mapEditorExportService = mapEditorExportService
     }
 
     public var body: some View {
@@ -47,7 +53,8 @@ public struct ProjectHomeView: View {
                 ProjectHomeDestinationView(
                     route: route,
                     projects: viewModel.projects,
-                    mapEditorService: mapEditorService
+                    mapEditorService: mapEditorService,
+                    mapEditorExportService: mapEditorExportService
                 )
             }
             .sheet(isPresented: $isPresentingCreateProject) {

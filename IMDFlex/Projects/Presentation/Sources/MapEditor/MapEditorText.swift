@@ -19,6 +19,11 @@ enum MapEditorText {
     static let finishDraft = localized("mapEditor.action.finishDraft", defaultValue: "Finish draft")
     static let name = localized("mapEditor.inspector.name", defaultValue: "Name")
     static let namePlaceholder = localized("mapEditor.inspector.namePlaceholder", defaultValue: "Enter a name")
+    static let shortName = localized("mapEditor.inspector.shortName", defaultValue: "Short Name")
+    static let shortNamePlaceholder = localized(
+        "mapEditor.inspector.shortNamePlaceholder",
+        defaultValue: "e.g. L1"
+    )
     static let saved = localized("mapEditor.inspector.saved", defaultValue: "Saved")
 
     static let mode = localized("mapEditor.accessibility.mode", defaultValue: "Editor mode")
@@ -67,6 +72,26 @@ enum MapEditorText {
         "mapEditor.alert.saveFailed.message",
         defaultValue: "Your change couldn't be saved. Try again."
     )
+    static let exportFailedAlertTitle = localized("mapEditor.alert.exportFailed.title", defaultValue: "Couldn't export")
+    static let exportFailedAlertMessage = localized(
+        "mapEditor.alert.exportFailed.message",
+        defaultValue: "Your IMDF archive couldn't be generated. Try again."
+    )
+
+    static let preflightTitle = localized("mapEditor.preflight.title", defaultValue: "Preflight Check")
+    static let preflightAllClear = localized("mapEditor.preflight.allClear", defaultValue: "No issues found")
+    static let preflightBlockedMessage = localized(
+        "mapEditor.preflight.blockedMessage",
+        defaultValue: "Resolve the errors below before exporting."
+    )
+    static let preflightValidatorHint = localized(
+        "mapEditor.preflight.validatorHint",
+        defaultValue: "After exporting, verify imdf.zip with Apple's IMDF Validator before submission."
+    )
+    static let preflightExport = localized("mapEditor.preflight.export", defaultValue: "Export imdf.zip")
+    static let preflightClose = localized("mapEditor.preflight.close", defaultValue: "Close")
+    static let preflightError = localized("mapEditor.preflight.error", defaultValue: "Error")
+    static let preflightWarning = localized("mapEditor.preflight.warning", defaultValue: "Warning")
 
     static let address = localized("mapEditor.feature.address", defaultValue: "Address")
     static let venue = localized("mapEditor.feature.venue", defaultValue: "Venue")
@@ -111,6 +136,7 @@ enum MapEditorText {
         case .missingParent: missingParentAlertTitle
         case .unsupported: unsupportedAlertTitle
         case .saveFailed: saveFailedAlertTitle
+        case .exportFailed: exportFailedAlertTitle
         }
     }
 
@@ -119,6 +145,7 @@ enum MapEditorText {
         case .missingParent: missingParentAlertMessage
         case .unsupported: unsupportedAlertMessage
         case .saveFailed: saveFailedAlertMessage
+        case .exportFailed: exportFailedAlertMessage
         }
     }
 

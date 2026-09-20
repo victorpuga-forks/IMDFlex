@@ -31,6 +31,13 @@ struct MapEditorInspector: View {
                         }
                     }
 
+                    if state.contract.requiresShortName {
+                        IMDFInspectorRow(MapEditorText.shortName) {
+                            TextField(MapEditorText.shortNamePlaceholder, text: shortNameBinding)
+                                .multilineTextAlignment(.trailing)
+                        }
+                    }
+
                     IMDFInspectorRow(
                         MapEditorText.saved,
                         value: "\(viewModel.savedCount(for: state.selectedFeature))"
@@ -59,5 +66,9 @@ struct MapEditorInspector: View {
 
     private var nameBinding: Binding<String> {
         Binding(get: { state.name }, set: { state.setName($0) })
+    }
+
+    private var shortNameBinding: Binding<String> {
+        Binding(get: { state.shortName }, set: { state.setShortName($0) })
     }
 }

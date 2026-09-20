@@ -75,6 +75,7 @@ public enum IMDFAuthoringFeature: String, Codable, CaseIterable, Hashable, Ident
                 geometry: .polygon,
                 requiresCategory: true,
                 requiresName: true,
+                requiresShortName: true,
                 requiredReferences: [.building],
                 categoryFeature: .level
             )
@@ -158,6 +159,7 @@ public struct IMDFAuthoringContract: Codable, Equatable, Sendable {
     public let geometry: IMDFAuthoringGeometry
     public let requiresCategory: Bool
     public let requiresName: Bool
+    public let requiresShortName: Bool
     public let requiredReferences: [IMDFAuthoringReference]
     public let categoryFeature: IMDFCategoryFeature?
 
@@ -166,6 +168,7 @@ public struct IMDFAuthoringContract: Codable, Equatable, Sendable {
         geometry: IMDFAuthoringGeometry,
         requiresCategory: Bool = false,
         requiresName: Bool = false,
+        requiresShortName: Bool = false,
         requiredReferences: [IMDFAuthoringReference] = [],
         categoryFeature: IMDFCategoryFeature? = nil
     ) {
@@ -173,6 +176,7 @@ public struct IMDFAuthoringContract: Codable, Equatable, Sendable {
         self.geometry = geometry
         self.requiresCategory = requiresCategory
         self.requiresName = requiresName
+        self.requiresShortName = requiresShortName
         self.requiredReferences = requiredReferences
         self.categoryFeature = categoryFeature
     }
@@ -185,6 +189,7 @@ public final class FeatureAuthoringToolState {
     public private(set) var drawingDraft: DrawingDraftState
     public private(set) var selectedCategoryValue: String?
     public private(set) var name: String
+    public private(set) var shortName: String
     public private(set) var satisfiedReferences: Set<IMDFAuthoringReference>
 
     public init(
@@ -192,12 +197,14 @@ public final class FeatureAuthoringToolState {
         drawingDraft: DrawingDraftState? = nil,
         selectedCategoryValue: String? = nil,
         name: String = "",
+        shortName: String = "",
         satisfiedReferences: Set<IMDFAuthoringReference> = []
     ) {
         self.selectedFeature = selectedFeature
         self.drawingDraft = drawingDraft ?? DrawingDraftState(geometry: selectedFeature.contract.geometry)
         self.selectedCategoryValue = selectedCategoryValue ?? Self.defaultCategoryValue(for: selectedFeature)
         self.name = name
+        self.shortName = shortName
         self.satisfiedReferences = satisfiedReferences
     }
 
@@ -210,7 +217,7 @@ public final class FeatureAuthoringToolState {
     }
 
     public var canFinish: Bool {
-        hasEnoughGeometry && hasRequiredCategory && hasRequiredName && hasRequiredReferences
+        hasEnoughGeometry && hasRequiredCategory && hasRequiredName && hasRequiredShortName && hasRequiredReferences
     }
 
     public var remainingPointCount: Int {
@@ -254,6 +261,10 @@ public final class FeatureAuthoringToolState {
         self.name = name
     }
 
+    public func setShortName(_ shortName: String) {
+        self.shortName = shortName
+    }
+
     public func satisfyReference(_ reference: IMDFAuthoringReference) {
         satisfiedReferences.insert(reference)
     }
@@ -282,6 +293,7 @@ public final class FeatureAuthoringToolState {
         drawingDraft.setGeometry(contract.geometry)
         selectedCategoryValue = Self.defaultCategoryValue(for: selectedFeature)
         name = ""
+        shortName = ""
     }
 
     private var hasEnoughGeometry: Bool {
@@ -296,6 +308,10 @@ public final class FeatureAuthoringToolState {
         !contract.requiresName || !name.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty
     }
 
+    private var hasRequiredShortName: Bool {
+        !contract.requiresShortName || !shortName.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty
+    }
+
     private var hasRequiredReferences: Bool {
         Set(contract.requiredReferences).isSubset(of: satisfiedReferences)
     }
@@ -304,6 +320,7 @@ public final class FeatureAuthoringToolState {
         drawingDraft.setGeometry(contract.geometry)
         selectedCategoryValue = Self.defaultCategoryValue(for: selectedFeature)
         name = ""
+        shortName = ""
         satisfiedReferences = []
     }
 

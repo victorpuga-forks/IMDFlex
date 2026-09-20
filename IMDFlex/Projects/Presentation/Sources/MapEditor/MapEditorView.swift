@@ -4,13 +4,22 @@ import Domain
 import Foundation
 import MapKit
 import SwiftUI
+import UniformTypeIdentifiers
 
 public struct MapEditorView: View {
     @State private var cameraPosition: MapCameraPosition = .automatic
     @State private var viewModel: MapEditorViewModel
+    @State private var exportDocument: MapEditorExportDocument?
+    @State private var isFileExporterPresented = false
 
-    public init(project: IMDFProject, service: any MapEditorServicing) {
-        _viewModel = State(initialValue: MapEditorViewModel(project: project, service: service))
+    public init(
+        project: IMDFProject,
+        service: any MapEditorServicing,
+        exportService: any MapEditorExportServicing
+    ) {
+        _viewModel = State(
+            initialValue: MapEditorViewModel(project: project, service: service, exportService: exportService)
+        )
     }
 
     public var body: some View {
@@ -94,13 +103,27 @@ public struct MapEditorView: View {
         .toolbar {
             ToolbarItem(placement: .primaryAction) {
                 Menu {
-                    Button(MapEditorText.export, systemImage: MapEditorSymbol.export) {}
+                    Button(MapEditorText.export, systemImage: MapEditorSymbol.export) {
+                        viewModel.startExport()
+                    }
                     Button(MapEditorText.settings, systemImage: MapEditorSymbol.settings) {}
                 } label: {
                     Image(systemName: MapEditorSymbol.more)
                 }
                 .accessibilityLabel(MapEditorText.editorActions)
             }
+        }
+        .sheet(isPresented: isPresentingPreflightSheet) {
+            MapEditorPreflightSheet(viewModel: viewModel, onExport: exportAndSave)
+              .presentationSizing(.form)
+        }
+        .fileExporter(
+            isPresented: $isFileExporterPresented,
+            document: exportDocument,
+            contentType: .zip,
+            defaultFilename: viewModel.project.name
+        ) { _ in
+            exportDocument = nil
         }
         .alert(
             alertTitle,
@@ -110,6 +133,16 @@ public struct MapEditorView: View {
             Button(MapEditorText.alertOK) {}
         } message: { alert in
             Text(MapEditorText.alertMessage(for: alert))
+        }
+    }
+
+    private func exportAndSave() {
+        Task {
+            if let data = await viewModel.exportArchive() {
+                exportDocument = MapEditorExportDocument(data: data)
+                isFileExporterPresented = true
+            }
+            viewModel.dismissPreflightSheet()
         }
     }
 
@@ -124,6 +157,17 @@ public struct MapEditorView: View {
             set: { isPresented in
                 if !isPresented {
                     viewModel.dismissAlert()
+                }
+            }
+        )
+    }
+
+    private var isPresentingPreflightSheet: Binding<Bool> {
+        Binding(
+            get: { viewModel.isPreflightSheetPresented },
+            set: { isPresented in
+                if !isPresented {
+                    viewModel.dismissPreflightSheet()
                 }
             }
         )

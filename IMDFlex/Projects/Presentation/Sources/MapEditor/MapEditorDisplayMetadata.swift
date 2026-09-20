@@ -1,3 +1,6 @@
+import DesignSystem
+import Domain
+
 extension IMDFAuthoringFeature {
     var title: String {
         switch self {
@@ -58,6 +61,52 @@ extension IMDFAuthoringReference {
         case .anchor: MapEditorText.anchor
         case .levelOrBuilding: MapEditorText.levelOrBuilding
         case .relationshipEndpoints: MapEditorText.endpoints
+        }
+    }
+}
+
+extension IMDFPreflightFeature {
+    /// Preflight issues describe features with Domain's own feature enum; reusing the authoring
+    /// feature's title keeps issue copy consistent with the sidebar/detail panel's naming.
+    var title: String {
+        authoringFeature.title
+    }
+
+    var systemImage: String {
+        authoringFeature.systemImage
+    }
+
+    private var authoringFeature: IMDFAuthoringFeature {
+        switch self {
+        case .venue: .venue
+        case .building: .building
+        case .footprint: .footprint
+        case .level: .level
+        case .unit: .unit
+        case .anchor: .anchor
+        case .occupant: .occupant
+        case .detail: .detail
+        case .fixture: .fixture
+        case .geofence: .geofence
+        case .kiosk: .kiosk
+        case .relationship: .relationship
+        case .section: .section
+        }
+    }
+}
+
+extension IMDFPreflightSeverity {
+    var title: String {
+        switch self {
+        case .error: MapEditorText.preflightError
+        case .warning: MapEditorText.preflightWarning
+        }
+    }
+
+    var badgeRole: IMDFStatusBadgeRole {
+        switch self {
+        case .error: .error
+        case .warning: .warning
         }
     }
 }

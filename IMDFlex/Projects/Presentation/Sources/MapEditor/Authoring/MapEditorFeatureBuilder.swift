@@ -30,6 +30,7 @@ public enum MapEditorFeatureBuilder {
         draft: IMDFDrawingDraftResult,
         categoryValue: String?,
         name: String,
+        shortName: String = "",
         to venue: Venue?
     ) -> MapEditorFeatureBuilderOutcome {
         switch feature {
@@ -42,7 +43,7 @@ public enum MapEditorFeatureBuilder {
         case .footprint:
             applyFootprint(draft: draft, categoryValue: categoryValue, to: venue)
         case .level:
-            applyLevel(draft: draft, categoryValue: categoryValue, name: name, to: venue)
+            applyLevel(draft: draft, categoryValue: categoryValue, name: name, shortName: shortName, to: venue)
         case .unit:
             applyUnit(draft: draft, categoryValue: categoryValue, name: name, to: venue)
         case .opening:
@@ -125,6 +126,7 @@ public enum MapEditorFeatureBuilder {
         draft: IMDFDrawingDraftResult,
         categoryValue: String?,
         name: String,
+        shortName: String,
         to venue: Venue?
     ) -> MapEditorFeatureBuilderOutcome {
         guard var venue, let buildingIndex = firstBuildingIndex(venue) else { return .missingParent }
@@ -135,6 +137,7 @@ public enum MapEditorFeatureBuilder {
             name: name,
             category: category,
             ordinal: nextOrdinal,
+            shortName: shortName.isEmpty ? nil : shortName,
             coordinates: coordinates(from: draft)
         )
         venue.buildings[buildingIndex].levels.append(level)

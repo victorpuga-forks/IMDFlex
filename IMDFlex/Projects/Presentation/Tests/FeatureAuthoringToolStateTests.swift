@@ -156,6 +156,7 @@ final class FeatureAuthoringToolStateTests: XCTestCase {
         let sut = makeSUT(selectedFeature: .level)
         sut.selectCategory(LevelCategory.parking.rawValue)
         sut.satisfyReference(.building)
+        sut.setShortName("P1")
         sut.appendDraftCoordinate(.fixture(longitude: 127.0, latitude: 37.0))
         sut.appendDraftCoordinate(.fixture(longitude: 127.1, latitude: 37.0))
         sut.appendDraftCoordinate(.fixture(longitude: 127.1, latitude: 37.1))
@@ -166,6 +167,25 @@ final class FeatureAuthoringToolStateTests: XCTestCase {
 
         // Then
         XCTAssertFalse(canFinishWithoutName)
+        XCTAssertTrue(sut.canFinish)
+    }
+
+    func test_whenRequiredShortNameIsMissing_thenStateCannotFinishEvenWithCategoryReferencesAndName() {
+        // Given
+        let sut = makeSUT(selectedFeature: .level)
+        sut.selectCategory(LevelCategory.parking.rawValue)
+        sut.satisfyReference(.building)
+        sut.setName("Parking Level")
+        sut.appendDraftCoordinate(.fixture(longitude: 127.0, latitude: 37.0))
+        sut.appendDraftCoordinate(.fixture(longitude: 127.1, latitude: 37.0))
+        sut.appendDraftCoordinate(.fixture(longitude: 127.1, latitude: 37.1))
+
+        // When
+        let canFinishWithoutShortName = sut.canFinish
+        sut.setShortName("P1")
+
+        // Then
+        XCTAssertFalse(canFinishWithoutShortName)
         XCTAssertTrue(sut.canFinish)
     }
 

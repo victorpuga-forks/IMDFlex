@@ -1,9 +1,7 @@
 {
   "sourceLanguage" : "en",
   "strings" : {
-    "%@" : {
-
-    },
+    "%@" : {},
     "mapEditor.accessibility.editorActions" : {
       "extractionState" : "manual",
       "localizations" : {
@@ -153,6 +151,40 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "설정"
+          }
+        }
+      }
+    },
+    "mapEditor.alert.exportFailed.message" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Your IMDF archive couldn't be generated. Try again."
+          }
+        },
+        "ko" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "IMDF 아카이브를 생성하지 못했습니다. 다시 시도하세요."
+          }
+        }
+      }
+    },
+    "mapEditor.alert.exportFailed.title" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Couldn't export"
+          }
+        },
+        "ko" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "내보내기 실패"
           }
         }
       }
@@ -752,6 +784,40 @@
         }
       }
     },
+    "mapEditor.inspector.shortName" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Short Name"
+          }
+        },
+        "ko" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "약칭"
+          }
+        }
+      }
+    },
+    "mapEditor.inspector.shortNamePlaceholder" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "e.g. L1"
+          }
+        },
+        "ko" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "예: L1"
+          }
+        }
+      }
+    },
     "mapEditor.inspector.status" : {
       "extractionState" : "manual",
       "localizations" : {
@@ -803,23 +869,6 @@
         }
       }
     },
-    "mapEditor.points.addingPoint" : {
-      "extractionState" : "manual",
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Tap the map to add a point"
-          }
-        },
-        "ko" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "지도를 탭하여 포인트를 추가하세요"
-          }
-        }
-      }
-    },
     "mapEditor.points.addPoint" : {
       "extractionState" : "manual",
       "localizations" : {
@@ -833,6 +882,23 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "포인트 추가"
+          }
+        }
+      }
+    },
+    "mapEditor.points.addingPoint" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Tap the map to add a point"
+          }
+        },
+        "ko" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "지도를 탭하여 포인트를 추가하세요"
           }
         }
       }
@@ -935,6 +1001,142 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "포인트"
+          }
+        }
+      }
+    },
+    "mapEditor.preflight.allClear" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "No issues found"
+          }
+        },
+        "ko" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "문제가 발견되지 않았습니다"
+          }
+        }
+      }
+    },
+    "mapEditor.preflight.blockedMessage" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Resolve the errors below before exporting."
+          }
+        },
+        "ko" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "내보내기 전에 아래 오류를 해결하세요."
+          }
+        }
+      }
+    },
+    "mapEditor.preflight.close" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Close"
+          }
+        },
+        "ko" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "닫기"
+          }
+        }
+      }
+    },
+    "mapEditor.preflight.error" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Error"
+          }
+        },
+        "ko" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "오류"
+          }
+        }
+      }
+    },
+    "mapEditor.preflight.export" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Export imdf.zip"
+          }
+        },
+        "ko" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "imdf.zip 내보내기"
+          }
+        }
+      }
+    },
+    "mapEditor.preflight.title" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Preflight Check"
+          }
+        },
+        "ko" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "사전 점검"
+          }
+        }
+      }
+    },
+    "mapEditor.preflight.validatorHint" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "After exporting, verify imdf.zip with Apple's IMDF Validator before submission."
+          }
+        },
+        "ko" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "내보낸 후에는 제출 전에 Apple IMDF Validator로 imdf.zip을 검증하세요."
+          }
+        }
+      }
+    },
+    "mapEditor.preflight.warning" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Warning"
+          }
+        },
+        "ko" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "경고"
           }
         }
       }

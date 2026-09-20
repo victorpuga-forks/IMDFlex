@@ -23,6 +23,13 @@ struct MapEditorFeatureDetailPanel: View {
                                 }
                             }
 
+                            if shape.feature.contract.requiresShortName {
+                                IMDFInspectorRow(MapEditorText.shortName) {
+                                    TextField(MapEditorText.shortNamePlaceholder, text: shortNameBinding)
+                                        .multilineTextAlignment(.trailing)
+                                }
+                            }
+
                             if shape.feature.contract.requiresCategory {
                                 IMDFInspectorRow(MapEditorText.category) {
                                     Picker(MapEditorText.category, selection: categoryBinding(for: shape.feature)) {
@@ -126,6 +133,10 @@ struct MapEditorFeatureDetailPanel: View {
 
     private var nameBinding: Binding<String> {
         Binding(get: { viewModel.editingName }, set: { viewModel.setEditingName($0) })
+    }
+
+    private var shortNameBinding: Binding<String> {
+        Binding(get: { viewModel.editingShortName }, set: { viewModel.setEditingShortName($0) })
     }
 
     private func categoryBinding(for feature: IMDFAuthoringFeature) -> Binding<String> {

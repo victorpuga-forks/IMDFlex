@@ -10,22 +10,30 @@ public final class MapEditorViewModel {
     public private(set) var mode: MapEditorMode = .insert
     public private(set) var selectedShapeID: UUID?
     public private(set) var editingName: String = ""
+    public private(set) var editingShortName: String = ""
     public private(set) var editingCategoryValue: String?
     public private(set) var editingCoordinates: [Coordinate] = []
     public private(set) var isAddingGeometryPoint = false
+    public private(set) var preflightIssues: [IMDFPreflightIssue] = []
+    public private(set) var isPreflightSheetPresented = false
 
     public let authoringState: FeatureAuthoringToolState
 
     @ObservationIgnored
     private let service: any MapEditorServicing
 
+    @ObservationIgnored
+    private let exportService: any MapEditorExportServicing
+
     public init(
         project: IMDFProject,
         service: any MapEditorServicing,
+        exportService: any MapEditorExportServicing,
         authoringState: FeatureAuthoringToolState = FeatureAuthoringToolState()
     ) {
         self.project = project
         self.service = service
+        self.exportService = exportService
         self.authoringState = authoringState
     }
 
@@ -37,6 +45,7 @@ public final class MapEditorViewModel {
             draft: draft,
             categoryValue: authoringState.selectedCategoryValue,
             name: authoringState.name,
+            shortName: authoringState.shortName,
             to: project.venue
         )
 
@@ -70,10 +79,12 @@ public final class MapEditorViewModel {
 
         let contract = shape.feature.contract
         let hasRequiredName = !contract.requiresName || !editingName.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty
+        let hasRequiredShortName = !contract.requiresShortName
+            || !editingShortName.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty
         let hasRequiredCategory = !contract.requiresCategory || editingCategoryValue != nil
         let hasRequiredGeometry = contract.geometry == .form
             || editingCoordinates.count >= contract.geometry.minimumPointCount
-        return hasRequiredName && hasRequiredCategory && hasRequiredGeometry
+        return hasRequiredName && hasRequiredShortName && hasRequiredCategory && hasRequiredGeometry
     }
 
     public var canEditSelectedFeatureGeometry: Bool {
@@ -92,6 +103,7 @@ public final class MapEditorViewModel {
 
         guard let shape = selectedShape else {
             editingName = ""
+            editingShortName = ""
             editingCategoryValue = nil
             editingCoordinates = []
             return
@@ -101,17 +113,20 @@ public final class MapEditorViewModel {
 
         guard let values = MapEditorFeatureEditor.currentValues(id: id, feature: shape.feature, in: project.venue) else {
             editingName = ""
+            editingShortName = ""
             editingCategoryValue = nil
             return
         }
 
         editingName = values.name ?? ""
+        editingShortName = values.shortName ?? ""
         editingCategoryValue = values.categoryValue
     }
 
     public func clearSelection() {
         selectedShapeID = nil
         editingName = ""
+        editingShortName = ""
         editingCategoryValue = nil
         editingCoordinates = []
         isAddingGeometryPoint = false
@@ -119,6 +134,10 @@ public final class MapEditorViewModel {
 
     public func setEditingName(_ name: String) {
         editingName = name
+    }
+
+    public func setEditingShortName(_ shortName: String) {
+        editingShortName = shortName
     }
 
     public func selectEditingCategory(_ value: String) {
@@ -164,6 +183,7 @@ public final class MapEditorViewModel {
             feature: shape.feature,
             name: MapEditorFeatureEditor.supportsNameField(shape.feature) ? editingName : nil,
             categoryValue: shape.feature.contract.requiresCategory ? editingCategoryValue : nil,
+            shortName: shape.feature.contract.requiresShortName ? editingShortName : nil,
             coordinates: canEditSelectedFeatureGeometry ? editingCoordinates : nil,
             to: project.venue
         )
@@ -173,6 +193,31 @@ public final class MapEditorViewModel {
             await save(venue)
         case .notFound:
             clearSelection()
+        }
+    }
+
+    public var hasBlockingPreflightIssues: Bool {
+        preflightIssues.contains { $0.severity == .error }
+    }
+
+    public func startExport() {
+        guard let venue = project.venue else { return }
+        preflightIssues = exportService.preflight(venue)
+        isPreflightSheetPresented = true
+    }
+
+    public func dismissPreflightSheet() {
+        isPreflightSheetPresented = false
+    }
+
+    public func exportArchive() async -> Data? {
+        guard let venue = project.venue else { return nil }
+
+        do {
+            return try await exportService.exportArchive(venue)
+        } catch {
+            alert = .exportFailed
+            return nil
         }
     }
 

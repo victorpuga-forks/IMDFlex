@@ -4,10 +4,12 @@ import Foundation
 public struct MapEditorFeatureFieldValues: Equatable, Sendable {
     public var name: String?
     public var categoryValue: String?
+    public var shortName: String?
 
-    public init(name: String? = nil, categoryValue: String? = nil) {
+    public init(name: String? = nil, categoryValue: String? = nil, shortName: String? = nil) {
         self.name = name
         self.categoryValue = categoryValue
+        self.shortName = shortName
     }
 }
 
@@ -70,7 +72,7 @@ public enum MapEditorFeatureEditor {
         case .level:
             guard let location = levelLocation(id: id, in: venue) else { return nil }
             let level = venue.buildings[location.buildingIndex].levels[location.levelIndex]
-            return .init(name: level.name, categoryValue: level.category.rawValue)
+            return .init(name: level.name, categoryValue: level.category.rawValue, shortName: level.shortName)
         case .unit:
             guard let location = unitLocation(id: id, in: venue) else { return nil }
             let unit = venue.buildings[location.buildingIndex].levels[location.levelIndex].units[location.unitIndex]
@@ -112,6 +114,7 @@ public enum MapEditorFeatureEditor {
         feature: IMDFAuthoringFeature,
         name: String?,
         categoryValue: String?,
+        shortName: String? = nil,
         coordinates: [Coordinate]?,
         to venue: Venue?
     ) -> MapEditorFeatureEditorOutcome {
@@ -153,6 +156,9 @@ public enum MapEditorFeatureEditor {
             }
             if let category = category(LevelCategory.self, from: categoryValue) {
                 venue.buildings[location.buildingIndex].levels[location.levelIndex].category = category
+            }
+            if let shortName {
+                venue.buildings[location.buildingIndex].levels[location.levelIndex].shortName = shortName.isEmpty ? nil : shortName
             }
             if let coordinates {
                 venue.buildings[location.buildingIndex].levels[location.levelIndex].coordinates = coordinates

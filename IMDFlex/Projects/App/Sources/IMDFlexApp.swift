@@ -10,7 +10,8 @@ struct IMDFlexApp: App {
     var body: some Scene {
         WindowGroup {
             let useCase = ProjectUseCase(repository: projectRepository)
-            ProjectHomeView(service: useCase, mapEditorService: useCase)
+            let exportService = MapEditorExportService(exporter: IMDFExporter())
+            ProjectHomeView(service: useCase, mapEditorService: useCase, mapEditorExportService: exportService)
         }
     }
 }
