@@ -10,9 +10,20 @@ public final class MapEditorViewModel {
     public private(set) var mode: MapEditorMode = .insert
     public private(set) var selectedShapeID: UUID?
     public private(set) var editingName: String = ""
+    public private(set) var editingAlternateName: String = ""
+    public private(set) var editingAccessibility: String = ""
+    public private(set) var editingHours: String = ""
+    public private(set) var editingPhone: String = ""
+    public private(set) var editingWebsite: String = ""
+    public private(set) var editingRestriction: String = ""
+    public private(set) var editingCorrelationID: String = ""
+    public private(set) var editingAddressID: UUID?
     public private(set) var editingShortName: String = ""
     public private(set) var editingCategoryValue: String?
     public private(set) var editingCoordinates: [Coordinate] = []
+    public private(set) var editingAnchorIDs: [UUID] = []
+    public private(set) var editingOriginID: UUID?
+    public private(set) var editingDestinationID: UUID?
     public private(set) var isAddingGeometryPoint = false
     public private(set) var preflightIssues: [IMDFPreflightIssue] = []
     public private(set) var isPreflightSheetPresented = false
@@ -46,6 +57,15 @@ public final class MapEditorViewModel {
             categoryValue: authoringState.selectedCategoryValue,
             name: authoringState.name,
             shortName: authoringState.shortName,
+            references: IMDFAuthoringReferenceSelection(
+                buildingID: authoringState.selectedReferenceID(for: .building),
+                levelID: authoringState.selectedReferenceID(for: .level)
+                    ?? authoringState.selectedReferenceID(for: .levelOrBuilding),
+                unitID: authoringState.selectedReferenceID(for: .unit),
+                anchorID: authoringState.selectedReferenceID(for: .anchor),
+                originID: authoringState.selectedReferenceID(for: .relationshipOrigin),
+                destinationID: authoringState.selectedReferenceID(for: .relationshipDestination)
+            ),
             to: project.venue
         )
 
@@ -54,10 +74,14 @@ public final class MapEditorViewModel {
             if await save(venue) {
                 authoringState.resetAfterFinish()
             }
-        case .missingParent:
+        case .missingReference:
             alert = .missingParent
+        case .invalidRelationshipEndpoints:
+            alert = .unsupported
         case .unsupported:
             alert = .unsupported
+          case .missingParent:
+            alert = .missingParent
         }
     }
 
@@ -67,6 +91,15 @@ public final class MapEditorViewModel {
 
     public var featureShapes: [MapEditorFeatureShape] {
         MapEditorFeatureShapeBuilder.shapes(for: project.venue)
+    }
+
+    public var drawableFeatureShapes: [MapEditorFeatureShape] {
+        featureShapes.filter { shape in
+            if case .none = shape.geometry {
+                return false
+            }
+            return true
+        }
     }
 
     public var selectedShape: MapEditorFeatureShape? {
@@ -84,7 +117,9 @@ public final class MapEditorViewModel {
         let hasRequiredCategory = !contract.requiresCategory || editingCategoryValue != nil
         let hasRequiredGeometry = contract.geometry == .form
             || editingCoordinates.count >= contract.geometry.minimumPointCount
-        return hasRequiredName && hasRequiredShortName && hasRequiredCategory && hasRequiredGeometry
+        let hasValidReferences = editingReferencesAreValid(for: shape.feature)
+        return hasRequiredName && hasRequiredShortName && hasRequiredCategory
+            && hasRequiredGeometry && hasValidReferences
     }
 
     public var canEditSelectedFeatureGeometry: Bool {
@@ -103,9 +138,13 @@ public final class MapEditorViewModel {
 
         guard let shape = selectedShape else {
             editingName = ""
+            resetMetadata()
             editingShortName = ""
             editingCategoryValue = nil
             editingCoordinates = []
+            editingAnchorIDs = []
+            editingOriginID = nil
+            editingDestinationID = nil
             return
         }
 
@@ -113,22 +152,41 @@ public final class MapEditorViewModel {
 
         guard let values = MapEditorFeatureEditor.currentValues(id: id, feature: shape.feature, in: project.venue) else {
             editingName = ""
+            resetMetadata()
             editingShortName = ""
             editingCategoryValue = nil
+            editingAnchorIDs = []
+            editingOriginID = nil
+            editingDestinationID = nil
             return
         }
 
         editingName = values.name ?? ""
+        editingAlternateName = values.alternateName ?? ""
+        editingAccessibility = values.accessibility ?? ""
+        editingHours = values.hours ?? ""
+        editingPhone = values.phone ?? ""
+        editingWebsite = values.website ?? ""
+        editingRestriction = values.restriction ?? ""
+        editingCorrelationID = values.correlationID ?? ""
+        editingAddressID = values.addressID
         editingShortName = values.shortName ?? ""
         editingCategoryValue = values.categoryValue
+        editingAnchorIDs = values.anchorIDs
+        editingOriginID = values.originID
+        editingDestinationID = values.destinationID
     }
 
     public func clearSelection() {
         selectedShapeID = nil
         editingName = ""
+        resetMetadata()
         editingShortName = ""
         editingCategoryValue = nil
         editingCoordinates = []
+        editingAnchorIDs = []
+        editingOriginID = nil
+        editingDestinationID = nil
         isAddingGeometryPoint = false
     }
 
@@ -136,12 +194,33 @@ public final class MapEditorViewModel {
         editingName = name
     }
 
+    public func setEditingAlternateName(_ value: String) { editingAlternateName = value }
+    public func setEditingAccessibility(_ value: String) { editingAccessibility = value }
+    public func setEditingHours(_ value: String) { editingHours = value }
+    public func setEditingPhone(_ value: String) { editingPhone = value }
+    public func setEditingWebsite(_ value: String) { editingWebsite = value }
+    public func setEditingRestriction(_ value: String) { editingRestriction = value }
+    public func setEditingCorrelationID(_ value: String) { editingCorrelationID = value }
+    public func selectEditingAddress(_ id: UUID?) { editingAddressID = id }
+
     public func setEditingShortName(_ shortName: String) {
         editingShortName = shortName
     }
 
     public func selectEditingCategory(_ value: String) {
         editingCategoryValue = value
+    }
+
+    public func selectEditingAnchor(_ id: UUID?) {
+        editingAnchorIDs = id.map { [$0] } ?? []
+    }
+
+    public func selectEditingOrigin(_ id: UUID?) {
+        editingOriginID = id
+    }
+
+    public func selectEditingDestination(_ id: UUID?) {
+        editingDestinationID = id
     }
 
     public func setAddingGeometryPoint(_ isAdding: Bool) {
@@ -187,9 +266,20 @@ public final class MapEditorViewModel {
             id: shape.id,
             feature: shape.feature,
             name: MapEditorFeatureEditor.supportsNameField(shape.feature) ? editingName : nil,
+            alternateName: editingAlternateName,
+            accessibility: editingAccessibility,
+            hours: editingHours,
+            phone: editingPhone,
+            website: editingWebsite,
+            restriction: editingRestriction,
+            correlationID: editingCorrelationID,
+            addressID: editingAddressID,
             categoryValue: shape.feature.contract.requiresCategory ? editingCategoryValue : nil,
             shortName: shape.feature.contract.requiresShortName ? editingShortName : nil,
             coordinates: canEditSelectedFeatureGeometry ? editingCoordinates : nil,
+            anchorIDs: editingAnchorIDs,
+            originID: editingOriginID,
+            destinationID: editingDestinationID,
             to: project.venue
         )
 
@@ -199,6 +289,18 @@ public final class MapEditorViewModel {
         case .notFound:
             clearSelection()
         }
+
+    }
+
+    private func resetMetadata() {
+        editingAlternateName = ""
+        editingAccessibility = ""
+        editingHours = ""
+        editingPhone = ""
+        editingWebsite = ""
+        editingRestriction = ""
+        editingCorrelationID = ""
+        editingAddressID = nil
     }
 
     public var hasBlockingPreflightIssues: Bool {
@@ -287,11 +389,27 @@ public final class MapEditorViewModel {
         levels(in: venue).flatMap(\.units)
     }
 
-    private func coordinates(from geometry: MapEditorFeatureShape.Geometry) -> [Coordinate] {
-        switch geometry {
-        case .polygon(let coordinates): coordinates
-        case .line(let coordinates): coordinates
-        case .point(let coordinate): [coordinate]
-        }
+  private func coordinates(from geometry: MapEditorFeatureShape.Geometry) -> [Coordinate] {
+    switch geometry {
+      case .none: []
+      case .polygon(let coordinates): coordinates
+      case .line(let coordinates): coordinates
+      case .point(let coordinate): [coordinate]
+    }
+  }
+
+        private func editingReferencesAreValid(for feature: IMDFAuthoringFeature) -> Bool {
+            switch feature {
+            case .occupant:
+                return editingAnchorIDs.count == 1
+            case .fixture, .kiosk:
+                return true
+            case .relationship:
+                return editingOriginID != nil
+                    && editingDestinationID != nil
+                    && editingOriginID != editingDestinationID
+            default:
+                return true
+            }
     }
 }

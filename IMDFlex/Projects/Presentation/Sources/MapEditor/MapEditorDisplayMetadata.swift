@@ -61,6 +61,8 @@ extension IMDFAuthoringReference {
         case .anchor: MapEditorText.anchor
         case .levelOrBuilding: MapEditorText.levelOrBuilding
         case .relationshipEndpoints: MapEditorText.endpoints
+        case .relationshipOrigin: MapEditorText.origin
+        case .relationshipDestination: MapEditorText.destination
         }
     }
 }

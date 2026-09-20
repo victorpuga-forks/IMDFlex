@@ -6,17 +6,41 @@ public struct Amenity: Identifiable, Codable, Sendable {
     public var name: String?
     public var category: AmenityCategory
     public var coordinate: Coordinate?
+    public var alternateName: String?
+    public var accessibility: String?
+    public var addressID: UUID?
+    public var correlationID: String?
+    public var hours: String?
+    public var phone: String?
+    public var website: URL?
+    public var displayPoint: Coordinate?
     
     public init(
         id: UUID = UUID(),
         name: String? = nil,
         category: AmenityCategory,
-        coordinate: Coordinate? = nil
+        coordinate: Coordinate? = nil,
+        alternateName: String? = nil,
+        accessibility: String? = nil,
+        addressID: UUID? = nil,
+        correlationID: String? = nil,
+        hours: String? = nil,
+        phone: String? = nil,
+        website: URL? = nil,
+        displayPoint: Coordinate? = nil
     ) {
         self.id = id
         self.name = name
         self.category = category
         self.coordinate = coordinate
+        self.alternateName = alternateName
+        self.accessibility = accessibility
+        self.addressID = addressID
+        self.correlationID = correlationID
+        self.hours = hours
+        self.phone = phone
+        self.website = website
+        self.displayPoint = displayPoint
     }
 }
 

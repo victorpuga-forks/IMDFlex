@@ -4,6 +4,7 @@ import Foundation
 /// A saved feature reduced to just what the map needs to draw it.
 public struct MapEditorFeatureShape: Identifiable, Equatable, Sendable {
     public enum Geometry: Equatable, Sendable {
+        case none
         case polygon([Coordinate])
         case line([Coordinate])
         case point(Coordinate)
@@ -15,24 +16,38 @@ public struct MapEditorFeatureShape: Identifiable, Equatable, Sendable {
     public let geometry: Geometry
 }
 
-/// Flattens a venue's nested features into map-drawable shapes.
+/// Flattens a venue's nested features into selectable feature descriptors.
 ///
-/// There's no level switcher yet, so every level's features are shown at once. `address`,
-/// `occupant`, and `relationship` carry no geometry of their own and are never drawn.
+/// Geometry-less features use `.none`; the sidebar can still select and edit them.
 public enum MapEditorFeatureShapeBuilder {
     public static func shapes(for venue: Venue?) -> [MapEditorFeatureShape] {
         guard let venue else { return [] }
 
         var shapes: [MapEditorFeatureShape] = []
 
-        if !venue.coordinates.isEmpty {
-            shapes.append(.init(id: venue.id, feature: .venue, title: venue.name, geometry: .polygon(venue.coordinates)))
+        shapes.append(
+            .init(
+                id: venue.id,
+                feature: .venue,
+                title: venue.name,
+                geometry: venue.coordinates.isEmpty ? .none : .polygon(venue.coordinates)
+            )
+        )
+        if let address = venue.address {
+            shapes.append(.init(id: address.id, feature: .address, title: address.address, geometry: .none))
         }
 
         for building in venue.buildings {
-            if let footprint = building.footprint, !footprint.coordinates.isEmpty {
+            shapes.append(.init(id: building.id, feature: .building, title: building.name, geometry: .none))
+
+            if let footprint = building.footprint {
                 shapes.append(
-                    .init(id: footprint.id, feature: .footprint, title: building.name, geometry: .polygon(footprint.coordinates))
+                    .init(
+                        id: footprint.id,
+                        feature: .footprint,
+                        title: footprint.name ?? building.name,
+                        geometry: footprint.coordinates.isEmpty ? .none : .polygon(footprint.coordinates)
+                    )
                 )
             }
 
@@ -41,56 +56,118 @@ public enum MapEditorFeatureShapeBuilder {
             }
         }
 
+        shapes.append(contentsOf: venue.relationships.map {
+            MapEditorFeatureShape(id: $0.id, feature: .relationship, title: nil, geometry: .none)
+        })
+
         return shapes
     }
 
     private static func shapes(for level: Level) -> [MapEditorFeatureShape] {
         var shapes: [MapEditorFeatureShape] = []
 
-        if !level.coordinates.isEmpty {
-            shapes.append(.init(id: level.id, feature: .level, title: level.name, geometry: .polygon(level.coordinates)))
-        }
+        shapes.append(
+            .init(
+                id: level.id,
+                feature: .level,
+                title: level.name,
+                geometry: level.coordinates.isEmpty ? .none : .polygon(level.coordinates)
+            )
+        )
 
         for unit in level.units {
-            if !unit.coordinates.isEmpty {
-                shapes.append(.init(id: unit.id, feature: .unit, title: unit.name, geometry: .polygon(unit.coordinates)))
-            }
+            shapes.append(
+                .init(
+                    id: unit.id,
+                    feature: .unit,
+                    title: unit.name,
+                    geometry: unit.coordinates.isEmpty ? .none : .polygon(unit.coordinates)
+                )
+            )
 
             for amenity in unit.amenities {
-                if let coordinate = amenity.coordinate {
-                    shapes.append(.init(id: amenity.id, feature: .amenity, title: amenity.name, geometry: .point(coordinate)))
-                }
+                shapes.append(
+                    .init(
+                        id: amenity.id,
+                        feature: .amenity,
+                        title: amenity.name,
+                        geometry: amenity.coordinate.map { .point($0) } ?? .none
+                    )
+                )
             }
 
             for anchor in unit.anchors {
                 shapes.append(.init(id: anchor.id, feature: .anchor, title: nil, geometry: .point(anchor.coordinate)))
             }
+            for occupant in unit.occupants {
+                shapes.append(.init(id: occupant.id, feature: .occupant, title: occupant.name, geometry: .none))
+            }
         }
 
-        for opening in level.openings where !opening.coordinates.isEmpty {
-            shapes.append(.init(id: opening.id, feature: .opening, title: nil, geometry: .line(opening.coordinates)))
-        }
-
-        for detail in level.details where !detail.coordinates.isEmpty {
-            shapes.append(.init(id: detail.id, feature: .detail, title: detail.name, geometry: .line(detail.coordinates)))
-        }
-
-        for fixture in level.fixtures where !fixture.coordinates.isEmpty {
-            shapes.append(.init(id: fixture.id, feature: .fixture, title: fixture.name, geometry: .polygon(fixture.coordinates)))
-        }
-
-        for geofence in level.geofences where !geofence.coordinates.isEmpty {
+        for opening in level.openings {
             shapes.append(
-                .init(id: geofence.id, feature: .geofence, title: geofence.name, geometry: .polygon(geofence.coordinates))
+                .init(
+                    id: opening.id,
+                    feature: .opening,
+                    title: opening.name,
+                    geometry: opening.coordinates.isEmpty ? .none : .line(opening.coordinates)
+                )
             )
         }
 
-        for kiosk in level.kiosks where !kiosk.coordinates.isEmpty {
-            shapes.append(.init(id: kiosk.id, feature: .kiosk, title: kiosk.name, geometry: .polygon(kiosk.coordinates)))
+        for detail in level.details {
+            shapes.append(
+                .init(
+                    id: detail.id,
+                    feature: .detail,
+                    title: detail.name,
+                    geometry: detail.coordinates.isEmpty ? .none : .line(detail.coordinates)
+                )
+            )
         }
 
-        for section in level.sections where !section.coordinates.isEmpty {
-            shapes.append(.init(id: section.id, feature: .section, title: section.name, geometry: .polygon(section.coordinates)))
+        for fixture in level.fixtures {
+            shapes.append(
+                .init(
+                    id: fixture.id,
+                    feature: .fixture,
+                    title: fixture.name,
+                    geometry: fixture.coordinates.isEmpty ? .none : .polygon(fixture.coordinates)
+                )
+            )
+        }
+
+        for geofence in level.geofences {
+            shapes.append(
+                .init(
+                    id: geofence.id,
+                    feature: .geofence,
+                    title: geofence.name,
+                    geometry: geofence.coordinates.isEmpty ? .none : .polygon(geofence.coordinates)
+                )
+            )
+        }
+
+        for kiosk in level.kiosks {
+            shapes.append(
+                .init(
+                    id: kiosk.id,
+                    feature: .kiosk,
+                    title: kiosk.name,
+                    geometry: kiosk.coordinates.isEmpty ? .none : .polygon(kiosk.coordinates)
+                )
+            )
+        }
+
+        for section in level.sections {
+            shapes.append(
+                .init(
+                    id: section.id,
+                    feature: .section,
+                    title: section.name,
+                    geometry: section.coordinates.isEmpty ? .none : .polygon(section.coordinates)
+                )
+            )
         }
 
         return shapes

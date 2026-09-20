@@ -9,6 +9,12 @@ public struct Venue: Identifiable, Codable, Sendable {
     public var buildings: [Building]
     public var address: Address?
     public var relationships: [Relationship]
+    public var alternateName: String?
+    public var displayPoint: Coordinate?
+    public var hours: String?
+    public var phone: String?
+    public var website: URL?
+    public var restriction: String?
     
     public init(
         id: UUID = UUID(),
@@ -17,7 +23,13 @@ public struct Venue: Identifiable, Codable, Sendable {
         coordinates: [Coordinate] = [],
         buildings: [Building] = [],
         address: Address? = nil,
-        relationships: [Relationship] = []
+        relationships: [Relationship] = [],
+        alternateName: String? = nil,
+        displayPoint: Coordinate? = nil,
+        hours: String? = nil,
+        phone: String? = nil,
+        website: URL? = nil,
+        restriction: String? = nil
     ) {
         self.id = id
         self.name = name
@@ -26,6 +38,12 @@ public struct Venue: Identifiable, Codable, Sendable {
         self.buildings = buildings
         self.address = address
         self.relationships = relationships
+        self.alternateName = alternateName
+        self.displayPoint = displayPoint
+        self.hours = hours
+        self.phone = phone
+        self.website = website
+        self.restriction = restriction
     }
 }
 

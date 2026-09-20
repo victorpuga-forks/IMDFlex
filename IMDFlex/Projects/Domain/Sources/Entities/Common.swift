@@ -8,6 +8,8 @@ public struct Address: Identifiable, Codable, Sendable {
     public var province: String?
     public var country: String?
     public var postalCode: String?
+    public var postalCodeExtension: String?
+    public var unit: String?
     
     public init(
         id: UUID = UUID(),
@@ -15,7 +17,9 @@ public struct Address: Identifiable, Codable, Sendable {
         locality: String? = nil,
         province: String? = nil,
         country: String? = nil,
-        postalCode: String? = nil
+        postalCode: String? = nil,
+        postalCodeExtension: String? = nil,
+        unit: String? = nil
     ) {
         self.id = id
         self.address = address
@@ -23,6 +27,8 @@ public struct Address: Identifiable, Codable, Sendable {
         self.province = province
         self.country = country
         self.postalCode = postalCode
+        self.postalCodeExtension = postalCodeExtension
+        self.unit = unit
     }
 }
 

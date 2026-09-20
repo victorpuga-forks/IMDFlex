@@ -1,7 +1,19 @@
 {
   "sourceLanguage" : "en",
   "strings" : {
-    "%@" : {},
+    "%@" : {
+
+    },
+    "%@ · %@" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "new",
+            "value" : "%1$@ · %2$@"
+          }
+        }
+      }
+    },
     "mapEditor.accessibility.editorActions" : {
       "extractionState" : "manual",
       "localizations" : {
@@ -869,23 +881,6 @@
         }
       }
     },
-    "mapEditor.points.addPoint" : {
-      "extractionState" : "manual",
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Add point"
-          }
-        },
-        "ko" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "포인트 추가"
-          }
-        }
-      }
-    },
     "mapEditor.points.addingPoint" : {
       "extractionState" : "manual",
       "localizations" : {
@@ -899,6 +894,23 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "지도를 탭하여 포인트를 추가하세요"
+          }
+        }
+      }
+    },
+    "mapEditor.points.addPoint" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Add point"
+          }
+        },
+        "ko" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "포인트 추가"
           }
         }
       }

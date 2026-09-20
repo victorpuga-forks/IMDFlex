@@ -14,6 +14,7 @@ enum MapEditorText {
     static let references = localized("mapEditor.requirement.references", defaultValue: "References")
     static let none = localized("mapEditor.requirement.none", defaultValue: "None")
     static let linked = localized("mapEditor.requirement.linked", defaultValue: "Linked")
+    static let selectReference = localized("mapEditor.requirement.selectReference", defaultValue: "Select")
     static let removePoint = localized("mapEditor.action.removePoint", defaultValue: "Remove point")
     static let cancelDraft = localized("mapEditor.action.cancelDraft", defaultValue: "Cancel draft")
     static let finishDraft = localized("mapEditor.action.finishDraft", defaultValue: "Finish draft")
@@ -27,6 +28,13 @@ enum MapEditorText {
     static let saved = localized("mapEditor.inspector.saved", defaultValue: "Saved")
 
     static let mode = localized("mapEditor.accessibility.mode", defaultValue: "Editor mode")
+    static let alternateName = localized("mapEditor.field.alternateName", defaultValue: "Alternate name")
+    static let accessibility = localized("mapEditor.field.accessibility", defaultValue: "Accessibility")
+    static let hours = localized("mapEditor.field.hours", defaultValue: "Hours")
+    static let phone = localized("mapEditor.field.phone", defaultValue: "Phone")
+    static let website = localized("mapEditor.field.website", defaultValue: "Website")
+    static let restriction = localized("mapEditor.field.restriction", defaultValue: "Restriction")
+    static let correlationID = localized("mapEditor.field.correlationID", defaultValue: "Correlation ID")
     static let insertMode = localized("mapEditor.mode.insert", defaultValue: "Insert")
     static let viewMode = localized("mapEditor.mode.view", defaultValue: "View")
 
@@ -117,6 +125,8 @@ enum MapEditorText {
 
     static let levelOrBuilding = localized("mapEditor.reference.levelOrBuilding", defaultValue: "Level or building")
     static let endpoints = localized("mapEditor.reference.endpoints", defaultValue: "Endpoints")
+    static let origin = localized("mapEditor.reference.origin", defaultValue: "Origin")
+    static let destination = localized("mapEditor.reference.destination", defaultValue: "Destination")
 
     private static let draftProgressFormat = localized(
         "mapEditor.draft.progressFormat",

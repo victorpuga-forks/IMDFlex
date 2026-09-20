@@ -9,6 +9,11 @@ public struct Occupant: Identifiable, Codable, Sendable {
     public var phone: String?
     public var website: URL?
     public var hours: String?
+    public var alternateName: String?
+    public var addressID: UUID?
+    public var correlationID: String?
+    public var displayPoint: Coordinate?
+    public var restriction: String?
     
     public init(
         id: UUID = UUID(),
@@ -17,7 +22,12 @@ public struct Occupant: Identifiable, Codable, Sendable {
         anchorID: UUID? = nil,
         phone: String? = nil,
         website: URL? = nil,
-        hours: String? = nil
+        hours: String? = nil,
+        alternateName: String? = nil,
+        addressID: UUID? = nil,
+        correlationID: String? = nil,
+        displayPoint: Coordinate? = nil,
+        restriction: String? = nil
     ) {
         self.id = id
         self.name = name
@@ -26,6 +36,11 @@ public struct Occupant: Identifiable, Codable, Sendable {
         self.phone = phone
         self.website = website
         self.hours = hours
+        self.alternateName = alternateName
+        self.addressID = addressID
+        self.correlationID = correlationID
+        self.displayPoint = displayPoint
+        self.restriction = restriction
     }
 }
 

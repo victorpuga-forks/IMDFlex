@@ -24,7 +24,10 @@ public enum IMDFAuthoringReference: String, Codable, CaseIterable, Hashable, Sen
     case unit
     case anchor
     case levelOrBuilding
+    /// Deprecated. Use relationshipOrigin and relationshipDestination.
     case relationshipEndpoints
+    case relationshipOrigin
+    case relationshipDestination
 }
 
 public enum IMDFAuthoringFeature: String, Codable, CaseIterable, Hashable, Identifiable, Sendable {
@@ -129,7 +132,7 @@ public enum IMDFAuthoringFeature: String, Codable, CaseIterable, Hashable, Ident
                 feature: self,
                 geometry: .polygon,
                 requiresCategory: true,
-                requiredReferences: [.levelOrBuilding],
+                requiredReferences: [.level],
                 categoryFeature: .geofence
             )
         case .kiosk:
@@ -139,7 +142,7 @@ public enum IMDFAuthoringFeature: String, Codable, CaseIterable, Hashable, Ident
                 feature: self,
                 geometry: .form,
                 requiresCategory: true,
-                requiredReferences: [.relationshipEndpoints],
+                requiredReferences: [.relationshipOrigin, .relationshipDestination],
                 categoryFeature: .relationship
             )
         case .section:
@@ -190,7 +193,7 @@ public final class FeatureAuthoringToolState {
     public private(set) var selectedCategoryValue: String?
     public private(set) var name: String
     public private(set) var shortName: String
-    public private(set) var satisfiedReferences: Set<IMDFAuthoringReference>
+    public private(set) var selectedReferences: [IMDFAuthoringReference: UUID]
 
     public init(
         selectedFeature: IMDFAuthoringFeature = .unit,
@@ -198,14 +201,14 @@ public final class FeatureAuthoringToolState {
         selectedCategoryValue: String? = nil,
         name: String = "",
         shortName: String = "",
-        satisfiedReferences: Set<IMDFAuthoringReference> = []
+        selectedReferences: [IMDFAuthoringReference: UUID] = [:]
     ) {
         self.selectedFeature = selectedFeature
         self.drawingDraft = drawingDraft ?? DrawingDraftState(geometry: selectedFeature.contract.geometry)
         self.selectedCategoryValue = selectedCategoryValue ?? Self.defaultCategoryValue(for: selectedFeature)
         self.name = name
         self.shortName = shortName
-        self.satisfiedReferences = satisfiedReferences
+        self.selectedReferences = selectedReferences
     }
 
     public var contract: IMDFAuthoringContract {
@@ -237,7 +240,7 @@ public final class FeatureAuthoringToolState {
     }
 
     public var missingReferences: [IMDFAuthoringReference] {
-        contract.requiredReferences.filter { !satisfiedReferences.contains($0) }
+        contract.requiredReferences.filter { selectedReferences[$0] == nil }
     }
 
     public func selectFeature(_ feature: IMDFAuthoringFeature) {
@@ -265,16 +268,33 @@ public final class FeatureAuthoringToolState {
         self.shortName = shortName
     }
 
+    public func selectReference(_ id: UUID, for reference: IMDFAuthoringReference) {
+        selectedReferences[reference] = id
+    }
+
+    @available(*, deprecated, message: "Select a concrete reference ID instead.")
     public func satisfyReference(_ reference: IMDFAuthoringReference) {
-        satisfiedReferences.insert(reference)
+        selectedReferences[reference] = UUID()
+    }
+
+    @available(*, deprecated, message: "Select concrete reference IDs instead.")
+    public func satisfyRequiredReferences() {
+        for reference in contract.requiredReferences {
+            satisfyReference(reference)
+        }
+    }
+
+    @available(*, deprecated, message: "Use selectedReferences instead.")
+    public var satisfiedReferences: Set<IMDFAuthoringReference> {
+        Set(selectedReferences.keys)
     }
 
     public func clearReference(_ reference: IMDFAuthoringReference) {
-        satisfiedReferences.remove(reference)
+        selectedReferences.removeValue(forKey: reference)
     }
 
-    public func satisfyRequiredReferences() {
-        satisfiedReferences.formUnion(contract.requiredReferences)
+    public func selectedReferenceID(for reference: IMDFAuthoringReference) -> UUID? {
+        selectedReferences[reference]
     }
 
     public func cancel() {
@@ -313,7 +333,7 @@ public final class FeatureAuthoringToolState {
     }
 
     private var hasRequiredReferences: Bool {
-        Set(contract.requiredReferences).isSubset(of: satisfiedReferences)
+        contract.requiredReferences.allSatisfy { selectedReferences[$0] != nil }
     }
 
     private func resetDraft() {
@@ -321,7 +341,7 @@ public final class FeatureAuthoringToolState {
         selectedCategoryValue = Self.defaultCategoryValue(for: selectedFeature)
         name = ""
         shortName = ""
-        satisfiedReferences = []
+        selectedReferences = [:]
     }
 
     private static func defaultCategoryValue(for feature: IMDFAuthoringFeature) -> String? {

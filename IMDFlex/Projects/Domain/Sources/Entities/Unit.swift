@@ -9,6 +9,10 @@ public struct Unit: Identifiable, Codable, Sendable {
     public var anchors: [Anchor]
     public var amenities: [Amenity]
     public var occupants: [Occupant]
+    public var alternateName: String?
+    public var displayPoint: Coordinate?
+    public var accessibility: String?
+    public var restriction: String?
     
     public init(
         id: UUID = UUID(),
@@ -17,7 +21,11 @@ public struct Unit: Identifiable, Codable, Sendable {
         coordinates: [Coordinate] = [],
         anchors: [Anchor] = [],
         amenities: [Amenity] = [],
-        occupants: [Occupant] = []
+        occupants: [Occupant] = [],
+        alternateName: String? = nil,
+        displayPoint: Coordinate? = nil,
+        accessibility: String? = nil,
+        restriction: String? = nil
     ) {
         self.id = id
         self.name = name
@@ -26,6 +34,10 @@ public struct Unit: Identifiable, Codable, Sendable {
         self.anchors = anchors
         self.amenities = amenities
         self.occupants = occupants
+        self.alternateName = alternateName
+        self.displayPoint = displayPoint
+        self.accessibility = accessibility
+        self.restriction = restriction
     }
 }
 

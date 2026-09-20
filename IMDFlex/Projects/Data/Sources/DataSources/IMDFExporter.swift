@@ -68,7 +68,9 @@ private struct IMDFArchiveBuilder {
                     "locality": address.locality,
                     "province": address.province,
                     "country": address.country,
-                    "postal_code": address.postalCode
+                    "postal_code": address.postalCode,
+                    "postal_code_ext": address.postalCodeExtension,
+                    "unit": address.unit
                 ])
             )
         ]
@@ -85,7 +87,12 @@ private struct IMDFArchiveBuilder {
                 "name": localized(venue.name),
                 "category": venue.category.rawValue,
                 "address_id": venue.address?.id.uuidString,
-                "display_point": displayPoint(for: coordinates)
+                "alt_name": localized(venue.alternateName),
+                "display_point": displayPoint(venue.displayPoint, fallback: coordinates),
+                "hours": venue.hours,
+                "phone": venue.phone,
+                "website": venue.website?.absoluteString,
+                "restriction": venue.restriction
             ])
         )
     }
@@ -99,8 +106,14 @@ private struct IMDFArchiveBuilder {
                 properties: compact([
                     "category": building.category.rawValue,
                     "name": localized(building.name),
+                    "alt_name": localized(building.alternateName),
+                    "address_id": building.addressID?.uuidString ?? venue.address?.id.uuidString,
+                    "restriction": building.restriction,
                     "venue_id": venue.id.uuidString,
-                    "display_point": displayPoint(for: building.footprint?.coordinates ?? [])
+                    "display_point": displayPoint(
+                        building.displayPoint,
+                        fallback: building.footprint?.coordinates ?? []
+                    )
                 ])
             )
         }
@@ -116,7 +129,8 @@ private struct IMDFArchiveBuilder {
                 geometry: polygonGeometry(footprint.coordinates),
                 properties: compact([
                     "category": footprint.category.rawValue,
-                    "building_id": building.id.uuidString
+                    "building_id": building.id.uuidString,
+                    "name": localized(footprint.name)
                 ])
             )
         }
@@ -134,10 +148,14 @@ private struct IMDFArchiveBuilder {
                     properties: compact([
                         "category": level.category.rawValue,
                         "name": localized(level.name),
+                        "alt_name": localized(level.alternateName),
                         "short_name": localized(level.shortName),
                         "ordinal": level.ordinal,
+                        "address_id": level.addressID?.uuidString ?? venue.address?.id.uuidString,
+                        "outdoor": level.outdoor,
+                        "restriction": level.restriction,
                         "building_id": building.id.uuidString,
-                        "display_point": displayPoint(for: coordinates)
+                        "display_point": displayPoint(level.displayPoint, fallback: coordinates)
                     ])
                 )
             }
@@ -155,9 +173,12 @@ private struct IMDFArchiveBuilder {
                         properties: compact([
                             "category": unit.category.rawValue,
                             "name": localized(unit.name),
+                            "alt_name": localized(unit.alternateName),
+                            "accessibility": unit.accessibility,
+                            "restriction": unit.restriction,
                             "level_id": level.id.uuidString,
                             "building_id": building.id.uuidString,
-                            "display_point": displayPoint(for: unit.coordinates)
+                            "display_point": displayPoint(unit.displayPoint, fallback: unit.coordinates)
                         ])
                     )
                 }
@@ -175,9 +196,14 @@ private struct IMDFArchiveBuilder {
                         geometry: lineGeometry(opening.coordinates),
                         properties: compact([
                             "category": opening.category.rawValue,
+                            "name": localized(opening.name),
+                            "alt_name": localized(opening.alternateName),
                             "access_control": opening.accessControl?.rawValue,
+                            "accessibility": opening.accessibility,
+                            "door": opening.door,
                             "level_id": level.id.uuidString,
-                            "building_id": building.id.uuidString
+                            "building_id": building.id.uuidString,
+                            "display_point": displayPoint(opening.displayPoint, fallback: opening.coordinates)
                         ])
                     )
                 }
@@ -197,7 +223,8 @@ private struct IMDFArchiveBuilder {
                             properties: compact([
                                 "unit_id": unit.id.uuidString,
                                 "level_id": level.id.uuidString,
-                                "building_id": building.id.uuidString
+                                "building_id": building.id.uuidString,
+                                "address_id": (anchor.addressID ?? venue.address?.id)?.uuidString
                             ])
                         )
                     }
@@ -218,9 +245,17 @@ private struct IMDFArchiveBuilder {
                             properties: compact([
                                 "category": amenity.category.rawValue,
                                 "name": localized(amenity.name),
+                                "alt_name": localized(amenity.alternateName),
+                                "accessibility": amenity.accessibility,
+                                "address_id": amenity.addressID?.uuidString ?? venue.address?.id.uuidString,
+                                "correlation_id": amenity.correlationID,
+                                "hours": amenity.hours,
+                                "phone": amenity.phone,
+                                "website": amenity.website?.absoluteString,
                                 "unit_id": unit.id.uuidString,
                                 "level_id": level.id.uuidString,
-                                "building_id": building.id.uuidString
+                                "building_id": building.id.uuidString,
+                                "display_point": displayPoint(amenity.displayPoint, fallback: [amenity.coordinate].compactMap { $0 })
                             ])
                         )
                     }
@@ -240,11 +275,16 @@ private struct IMDFArchiveBuilder {
                             geometry: NSNull(),
                             properties: compact([
                                 "name": localized(occupant.name),
+                                "alt_name": localized(occupant.alternateName),
+                                "address_id": occupant.addressID?.uuidString,
+                                "correlation_id": occupant.correlationID,
                                 "category": occupant.category?.rawValue,
                                 "anchor_id": occupant.anchorID?.uuidString,
                                 "phone": occupant.phone,
                                 "website": occupant.website?.absoluteString,
-                                "hours": occupant.hours
+                                "hours": occupant.hours,
+                                "restriction": occupant.restriction,
+                                "display_point": displayPoint(occupant.displayPoint, fallback: [])
                             ])
                         )
                     }
@@ -286,7 +326,7 @@ private struct IMDFArchiveBuilder {
                             "level_id": level.id.uuidString,
                             "building_id": building.id.uuidString,
                             "anchor_ids": uuidStrings(fixture.anchorIDs),
-                            "display_point": displayPoint(for: fixture.coordinates)
+                            "display_point": displayPoint(nil, fallback: fixture.coordinates)
                         ])
                     )
                 }
@@ -307,7 +347,7 @@ private struct IMDFArchiveBuilder {
                             "name": localized(geofence.name),
                             "level_id": level.id.uuidString,
                             "building_id": building.id.uuidString,
-                            "display_point": displayPoint(for: geofence.coordinates)
+                            "display_point": displayPoint(nil, fallback: geofence.coordinates)
                         ])
                     )
                 }
@@ -328,7 +368,7 @@ private struct IMDFArchiveBuilder {
                             "level_id": level.id.uuidString,
                             "building_id": building.id.uuidString,
                             "anchor_ids": uuidStrings(kiosk.anchorIDs),
-                            "display_point": displayPoint(for: kiosk.coordinates)
+                            "display_point": displayPoint(nil, fallback: kiosk.coordinates)
                         ])
                     )
                 }
@@ -365,7 +405,7 @@ private struct IMDFArchiveBuilder {
                             "name": localized(section.name),
                             "level_id": level.id.uuidString,
                             "building_id": building.id.uuidString,
-                            "display_point": displayPoint(for: section.coordinates)
+                            "display_point": displayPoint(nil, fallback: section.coordinates)
                         ])
                     )
                 }
@@ -410,7 +450,17 @@ private struct IMDFArchiveBuilder {
         ]
     }
 
-    private func displayPoint(for coordinates: [Coordinate]) -> [String: Any]? {
+    private func displayPoint(
+        _ explicit: Coordinate?,
+        fallback coordinates: [Coordinate]
+    ) -> [String: Any]? {
+        if let explicit {
+            return [
+                "type": "Point",
+                "coordinates": position(explicit)
+            ]
+        }
+
         guard !coordinates.isEmpty else { return nil }
         let latitude = coordinates.map(\.latitude).reduce(0, +) / Double(coordinates.count)
         let longitude = coordinates.map(\.longitude).reduce(0, +) / Double(coordinates.count)

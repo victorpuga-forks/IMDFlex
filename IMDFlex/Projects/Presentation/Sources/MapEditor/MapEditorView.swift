@@ -31,7 +31,7 @@ public struct MapEditorView: View {
             ZStack {
                 MapReader { proxy in
                     Map(position: $cameraPosition, selection: shapeSelectionBinding) {
-                        ForEach(viewModel.featureShapes) { shape in
+                        ForEach(viewModel.drawableFeatureShapes) { shape in
                             mapContent(for: shape)
                         }
 
@@ -200,6 +200,8 @@ public struct MapEditorView: View {
         let geometry = isSelected && viewModel.mode == .view ? liveGeometry(for: shape) : shape.geometry
 
         switch geometry {
+        case .none:
+            EmptyMapContent()
         case .polygon(let coordinates):
             MapPolygon(coordinates: coordinates.map(coordinate))
                 .foregroundStyle(color.opacity(isSelected ? 0.5 : 0.25))
@@ -220,6 +222,7 @@ public struct MapEditorView: View {
     /// working buffer rather than the last-saved shape, so drags/adds/reorders show immediately.
     private func liveGeometry(for shape: MapEditorFeatureShape) -> MapEditorFeatureShape.Geometry {
         switch shape.geometry {
+        case .none: .none
         case .polygon: .polygon(viewModel.editingCoordinates)
         case .line: .line(viewModel.editingCoordinates)
         case .point(let fallback): .point(viewModel.editingCoordinates.first ?? fallback)

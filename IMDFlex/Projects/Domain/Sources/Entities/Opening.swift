@@ -6,17 +6,32 @@ public struct Opening: Identifiable, Codable, Sendable {
     public var category: OpeningCategory
     public var coordinates: [Coordinate]
     public var accessControl: AccessControl?
+    public var name: String?
+    public var alternateName: String?
+    public var accessibility: String?
+    public var door: String?
+    public var displayPoint: Coordinate?
     
     public init(
         id: UUID = UUID(),
         category: OpeningCategory,
         coordinates: [Coordinate] = [],
-        accessControl: AccessControl? = nil
+        accessControl: AccessControl? = nil,
+        name: String? = nil,
+        alternateName: String? = nil,
+        accessibility: String? = nil,
+        door: String? = nil,
+        displayPoint: Coordinate? = nil
     ) {
         self.id = id
         self.category = category
         self.coordinates = coordinates
         self.accessControl = accessControl
+        self.name = name
+        self.alternateName = alternateName
+        self.accessibility = accessibility
+        self.door = door
+        self.displayPoint = displayPoint
     }
 }
 

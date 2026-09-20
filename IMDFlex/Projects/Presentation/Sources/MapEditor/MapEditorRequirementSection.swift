@@ -22,16 +22,57 @@ struct MapEditorRequirementSection: View {
                 IMDFInspectorRow(MapEditorText.references, value: MapEditorText.none)
                     .systemImage(MapEditorSymbol.readyFilled)
             } else {
-                IMDFInspectorActionRow(MapEditorText.references) {
-                    state.satisfyRequiredReferences()
+                ForEach(state.contract.requiredReferences, id: \.self) { reference in
+                    referencePicker(for: reference)
                 }
-                .value(
-                    state.missingReferences.isEmpty
-                        ? MapEditorText.linked
-                        : MapEditorText.referenceList(state.missingReferences.map(\.title))
-                )
-                .complete(state.missingReferences.isEmpty)
             }
+        }
+    }
+
+    private func referencePicker(for reference: IMDFAuthoringReference) -> some View {
+        let options = IMDFAuthoringReferenceCatalog.options(
+            for: reference,
+            in: viewModel.project.venue,
+            excluding: excludedEndpointID(for: reference)
+        )
+
+        return IMDFInspectorRow(reference.title) {
+            Picker(reference.title, selection: selectionBinding(for: reference)) {
+                Text(MapEditorText.selectReference).tag(UUID?.none)
+                ForEach(options) { option in
+                    Text("\(option.title) · \(option.context)")
+                        .tag(UUID?.some(option.id))
+                }
+            }
+            .pickerStyle(.menu)
+            .labelsHidden()
+        }
+        .systemImage(
+            state.selectedReferenceID(for: reference) == nil
+                ? MapEditorSymbol.draft
+                : MapEditorSymbol.readyFilled
+        )
+    }
+
+    private func selectionBinding(for reference: IMDFAuthoringReference) -> Binding<UUID?> {
+        Binding(
+            get: { state.selectedReferenceID(for: reference) },
+            set: { id in
+                if let id {
+                    state.selectReference(id, for: reference)
+                } else {
+                    state.clearReference(reference)
+                }
+            }
+        )
+    }
+
+    private func excludedEndpointID(for reference: IMDFAuthoringReference) -> UUID? {
+        switch reference {
+        case .relationshipDestination:
+            state.selectedReferenceID(for: .relationshipOrigin)
+        default:
+            nil
         }
     }
 

@@ -15,6 +15,11 @@ public struct Level: Identifiable, Codable, Sendable {
     public var geofences: [Geofence]
     public var kiosks: [Kiosk]
     public var sections: [Section]
+    public var alternateName: String?
+    public var displayPoint: Coordinate?
+    public var addressID: UUID?
+    public var outdoor: Bool?
+    public var restriction: String?
     
     public init(
         id: UUID = UUID(),
@@ -29,7 +34,12 @@ public struct Level: Identifiable, Codable, Sendable {
         fixtures: [Fixture] = [],
         geofences: [Geofence] = [],
         kiosks: [Kiosk] = [],
-        sections: [Section] = []
+        sections: [Section] = [],
+        alternateName: String? = nil,
+        displayPoint: Coordinate? = nil,
+        addressID: UUID? = nil,
+        outdoor: Bool? = nil,
+        restriction: String? = nil
     ) {
         self.id = id
         self.name = name
@@ -44,6 +54,11 @@ public struct Level: Identifiable, Codable, Sendable {
         self.geofences = geofences
         self.kiosks = kiosks
         self.sections = sections
+        self.alternateName = alternateName
+        self.displayPoint = displayPoint
+        self.addressID = addressID
+        self.outdoor = outdoor
+        self.restriction = restriction
     }
 }
 
