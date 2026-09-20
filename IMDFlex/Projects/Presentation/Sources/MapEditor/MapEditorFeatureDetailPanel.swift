@@ -6,6 +6,7 @@ struct MapEditorFeatureDetailPanel: View {
     let viewModel: MapEditorViewModel
 
     @State private var isAdvancedExpanded = false
+    @State private var isDeleteConfirmationPresented = false
 
     private enum MetadataField: Hashable {
         case alternateName
@@ -74,6 +75,13 @@ struct MapEditorFeatureDetailPanel: View {
                                 .font(IMDFFont.inspectorLabel)
                                 .foregroundStyle(.secondary)
                         }
+
+                        if shape.feature != .venue {
+                            IMDFToolButton(MapEditorText.delete, systemImage: "trash") {
+                                isDeleteConfirmationPresented = true
+                            }
+                            .role(.destructive)
+                        }
                     } else {
                         Text(MapEditorText.nothingToEdit)
                             .font(IMDFFont.inspectorLabel)
@@ -83,6 +91,25 @@ struct MapEditorFeatureDetailPanel: View {
             }
         }
         .imdfPanelStyle(.inspector)
+        .confirmationDialog(
+            deleteConfirmationTitle,
+            isPresented: $isDeleteConfirmationPresented,
+            titleVisibility: .visible
+        ) {
+            Button(MapEditorText.delete, role: .destructive) {
+                Task { await viewModel.deleteSelectedFeature() }
+            }
+            Button(MapEditorText.deleteCancel, role: .cancel) {}
+        } message: {
+            Text(MapEditorText.deleteFeatureMessage)
+        }
+    }
+
+    private var deleteConfirmationTitle: String {
+        guard let feature = viewModel.selectedShape?.feature else {
+            return MapEditorText.deleteFeatureTitle
+        }
+        return "\(feature.title): \(MapEditorText.deleteFeatureTitle)"
     }
 
     private var geometrySection: some View {

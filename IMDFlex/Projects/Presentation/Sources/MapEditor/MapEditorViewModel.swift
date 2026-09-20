@@ -289,7 +289,23 @@ public final class MapEditorViewModel {
         case .notFound:
             clearSelection()
         }
+    }
 
+    public func deleteSelectedFeature() async {
+        guard let shape = selectedShape, let venue = project.venue else { return }
+
+        switch MapEditorFeatureDeleter.delete(id: shape.id, feature: shape.feature, from: venue) {
+        case .success(let updatedVenue):
+            if await save(updatedVenue) {
+                clearSelection()
+            }
+        case .notFound:
+            clearSelection()
+        case .blockedByReferences(let relationshipIDs):
+            alert = .deletionBlocked(relationshipIDs)
+        case .unsupported:
+            alert = .unsupported
+        }
     }
 
     private func resetMetadata() {
@@ -369,11 +385,13 @@ public final class MapEditorViewModel {
 
     @discardableResult
     private func save(_ venue: Venue) async -> Bool {
-        project.venue = venue
-        project.updatedAt = Date()
+        var updatedProject = project
+        updatedProject.venue = venue
+        updatedProject.updatedAt = Date()
 
         do {
-            try await service.updateProject(project)
+            try await service.updateProject(updatedProject)
+            project = updatedProject
             return true
         } catch {
             alert = .saveFailed

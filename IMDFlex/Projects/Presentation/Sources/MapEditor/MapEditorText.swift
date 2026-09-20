@@ -42,6 +42,21 @@ enum MapEditorText {
     static let sidebarEmpty = localized("mapEditor.sidebar.empty", defaultValue: "No features yet")
 
     static let save = localized("mapEditor.action.save", defaultValue: "Save")
+    static let delete = localized("mapEditor.action.delete", defaultValue: "Delete")
+    static let deleteFeatureTitle = localized("mapEditor.delete.title", defaultValue: "Delete feature?")
+    static let deleteFeatureMessage = localized(
+        "mapEditor.delete.message",
+        defaultValue: "This will remove the feature and its owned children. This action cannot be undone."
+    )
+    static let deleteCancel = localized("mapEditor.delete.cancel", defaultValue: "Cancel")
+    static let deletionBlockedAlertTitle = localized(
+        "mapEditor.alert.deletionBlocked.title",
+        defaultValue: "Can't delete feature"
+    )
+    static let deletionBlockedAlertMessage = localized(
+        "mapEditor.alert.deletionBlocked.message",
+        defaultValue: "This feature is used by relationships: %@. Remove or edit those relationships first."
+    )
     static let nothingToEdit = localized(
         "mapEditor.detail.nothingToEdit",
         defaultValue: "Nothing to edit yet. Select a feature from the map or the list."
@@ -147,6 +162,7 @@ enum MapEditorText {
         case .unsupported: unsupportedAlertTitle
         case .saveFailed: saveFailedAlertTitle
         case .exportFailed: exportFailedAlertTitle
+        case .deletionBlocked: deletionBlockedAlertTitle
         }
     }
 
@@ -156,6 +172,8 @@ enum MapEditorText {
         case .unsupported: unsupportedAlertMessage
         case .saveFailed: saveFailedAlertMessage
         case .exportFailed: exportFailedAlertMessage
+        case .deletionBlocked(let ids):
+            String(format: deletionBlockedAlertMessage, locale: .current, referenceList(ids.map(\.uuidString)))
         }
     }
 
